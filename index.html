@@ -22,15 +22,15 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .topnav{
   position:sticky;top:0;z-index:50;
   background:rgba(245,246,248,.96);backdrop-filter:blur(12px);
-  border-bottom:2px solid var(--line);
-  padding:0;margin-bottom:0;
+  border-bottom:1px solid var(--line);
+  padding:0;margin-bottom:0;overflow:hidden;
 }
 .topnav-inner{max-width:920px;margin:0 auto;padding:0 20px;display:flex;align-items:stretch;gap:0}
-.topnav h1{font-size:1.15rem;margin:0;padding:14px 0;letter-spacing:-.01em;white-space:nowrap;color:var(--accent)}
+.topnav h1{font-size:1.05rem;margin:0;padding:9px 0;letter-spacing:-.01em;white-space:nowrap;color:var(--accent)}
 .tab-btns{display:flex;margin-left:auto;gap:0}
 .tab-btn{
-  background:none;border:none;border-bottom:3px solid transparent;
-  padding:14px 22px;font-size:.92rem;font-weight:600;color:var(--muted);
+  background:none;border:none;border-bottom:2.5px solid transparent;
+  padding:9px 18px 6px;font-size:.88rem;font-weight:600;color:var(--muted);
   cursor:pointer;font-family:inherit;border-radius:0;transition:color .15s,border-color .15s;
 }
 .tab-btn:hover{color:var(--ink);border-color:#d0d5dd}
@@ -63,7 +63,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
 
 /* ── Study toolbar ── */
 .study-toolbar{
-  position:sticky;top:53px;z-index:20;background:rgba(245,246,248,.94);
+  position:sticky;top:40px;z-index:20;background:rgba(245,246,248,.94);
   backdrop-filter:blur(10px);padding:11px 0;margin-bottom:20px;border-bottom:1px solid var(--line);
   display:flex;flex-wrap:wrap;gap:7px;align-items:center}
 #study-search{flex:1 1 190px;min-width:150px;padding:8px 12px;border:1px solid var(--line);
@@ -152,7 +152,7 @@ article.q[hidden]{display:none}
 .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
 
 .exam-toolbar{
-  position:sticky;top:53px;z-index:20;background:rgba(245,246,248,.94);
+  position:sticky;top:40px;z-index:20;background:rgba(245,246,248,.94);
   backdrop-filter:blur(10px);padding:11px 0;margin-bottom:20px;border-bottom:1px solid var(--line);
   display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .exam-toolbar .progress{font-size:.85rem;color:var(--muted)}
