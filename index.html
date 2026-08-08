@@ -162,7 +162,9 @@ article.q[hidden]{display:none}
   display:flex;align-items:center;gap:12px;flex-wrap:nowrap;
 }
 .exam-topbar .et-set{font-size:.92rem;font-weight:700;color:var(--accent);white-space:nowrap}
-.exam-topbar .et-progress{font-size:.82rem;color:var(--muted);white-space:nowrap}
+.exam-topbar .et-progress{font-size:.82rem;color:var(--muted);white-space:nowrap;cursor:pointer;
+  padding:3px 8px;border-radius:6px;transition:background .15s}
+.exam-topbar .et-progress:hover{background:var(--accent-soft)}
 .exam-topbar .et-progress b{color:var(--ink)}
 .exam-topbar .et-timer{font-size:.82rem;color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .exam-topbar .et-spacer{flex:1}
@@ -174,11 +176,39 @@ article.q[hidden]{display:none}
 .exam-topbar .et-btn.primary:hover{opacity:.88}
 body.exam-active .topnav{display:none}
 body.exam-active footer{display:none}
-body.exam-active .wrap{padding-top:44px}
+body.exam-active .wrap{padding-top:56px}
 
-/* Exam question: no card wrapper */
+/* Exam question: no card wrapper, add top spacing */
 .exam-mode article.q{background:transparent;border:none;padding:0;margin-bottom:0}
 .exam-mode .qhead{display:none}
+
+/* Exam question number badge */
+.exam-qbadge{
+  display:inline-block;font-size:.82rem;font-weight:700;color:var(--accent);
+  background:var(--accent-soft);padding:3px 12px;border-radius:8px;margin-bottom:12px}
+
+/* Question map modal */
+.qmap-overlay{
+  position:fixed;top:0;left:0;right:0;bottom:0;z-index:55;
+  background:rgba(0,0,0,.35);opacity:0;transition:opacity .2s;pointer-events:none}
+.qmap-overlay.open{opacity:1;pointer-events:auto}
+.qmap-panel{
+  position:fixed;top:0;left:0;right:0;z-index:65;
+  background:#fff;border-bottom:2px solid var(--line);
+  box-shadow:0 8px 32px rgba(0,0,0,.12);
+  transform:translateY(-100%);transition:transform .25s ease;
+  padding:0;max-height:70vh;overflow-y:auto}
+.qmap-overlay.open .qmap-panel{transform:translateY(0)}
+.qmap-inner{max-width:920px;margin:0 auto;padding:18px 20px 22px}
+.qmap-inner h3{font-size:.92rem;margin:0 0 14px;color:var(--ink)}
+.qmap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:6px}
+.qmap-cell{
+  width:100%;aspect-ratio:1;border:1px solid var(--line);border-radius:8px;
+  background:#fff;font-size:.78rem;font-weight:600;color:var(--ink);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.qmap-cell:hover{border-color:var(--accent);color:var(--accent)}
+.qmap-cell.answered{background:var(--accent-soft);border-color:#c2d0f5;color:var(--accent)}
+.qmap-cell.current{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
 
 /* Exam question clickable options */
 .exam-mode ol.opts li{cursor:pointer;user-select:none}
@@ -6490,6 +6520,15 @@ switch (block.type) {
   </div>
 </div>
 
+<div class="qmap-overlay" id="qmap-overlay">
+  <div class="qmap-panel">
+    <div class="qmap-inner">
+      <h3>문제 목록</h3>
+      <div class="qmap-grid" id="qmap-grid"></div>
+    </div>
+  </div>
+</div>
+
 <button id="top">&uarr; 맨 위로</button>
 
 <script>
@@ -6587,13 +6626,44 @@ function showQuestion(idx){
   $('#exam-prev').disabled=idx===0;
   $('#exam-next').disabled=idx===qs.length-1;
   $('#exam-qnum').textContent=`${idx+1} / ${qs.length}`;
+  updateQmapState();
   window.scrollTo(0,0);
+}
+
+function updateQmapState(){
+  const qs=$$('#exam-questions article.q');
+  $$('#qmap-grid .qmap-cell').forEach((cell,i)=>{
+    cell.classList.toggle('current',i===currentQ);
+    cell.classList.toggle('answered',!!qs[i]?.querySelector('ol.opts li.selected'));
+  });
+}
+
+function toggleQmap(){
+  const overlay=$('#qmap-overlay');
+  const open=overlay.classList.toggle('open');
+  if(open) updateQmapState();
+}
+
+function buildQmap(count){
+  const grid=$('#qmap-grid');
+  grid.innerHTML='';
+  for(let i=0;i<count;i++){
+    const cell=document.createElement('div');
+    cell.className='qmap-cell';
+    cell.textContent=i+1;
+    cell.onclick=()=>{
+      showQuestion(i);
+      $('#qmap-overlay').classList.remove('open');
+    };
+    grid.appendChild(cell);
+  }
 }
 
 function updateProgress(){
   const qs=$$('#exam-questions article.q');
   const answered=qs.filter(q=>q.querySelector('ol.opts li.selected')).length;
   $('#et-progress').innerHTML=`<b>${answered}</b> / ${qs.length} 답변`;
+  updateQmapState();
 }
 
 function updateTimer(){
@@ -6620,7 +6690,7 @@ $('#start-exam').onclick=()=>{
   qContainer.classList.remove('graded');
 
   const sourceQs=$$(`#study-questions article.q[id^="q${selectedSet}-"]`);
-  sourceQs.forEach(sq=>{
+  sourceQs.forEach((sq,i)=>{
     const clone=sq.cloneNode(true);
     clone.classList.remove('revealed');
     clone.querySelectorAll('.reveal').forEach(b=>b.textContent='정답 보기');
@@ -6628,6 +6698,10 @@ $('#start-exam').onclick=()=>{
       li.classList.remove('selected');
       li.removeAttribute('data-wrong');
     });
+    const badge=document.createElement('div');
+    badge.className='exam-qbadge';
+    badge.textContent=`Q${i+1}`;
+    clone.insertBefore(badge,clone.firstChild);
     qContainer.appendChild(clone);
   });
 
@@ -6676,10 +6750,13 @@ $('#start-exam').onclick=()=>{
   $('#et-set').textContent=`Set ${selectedSet}`;
   $('#exam-topbar').style.display='block';
   document.body.classList.add('exam-active');
+  buildQmap(totalQ);
 };
 
 $('#exam-prev').onclick=()=>{if(currentQ>0)showQuestion(currentQ-1);};
 $('#exam-next').onclick=()=>{if(currentQ<totalQ-1)showQuestion(currentQ+1);};
+$('#et-progress').onclick=()=>{if(!examGraded)toggleQmap();};
+$('#qmap-overlay').onclick=e=>{if(e.target===$('#qmap-overlay'))toggleQmap();};
 
 $('#submit-exam').onclick=()=>{
   if(examGraded)return;
@@ -6720,6 +6797,7 @@ $('#submit-exam').onclick=()=>{
 
   $('#exam-questions').classList.add('graded');
   $('#exam-nav').style.display='none';
+  $('#qmap-overlay').classList.remove('open');
   qs.forEach(q=>q.style.display='');
 
   const total=qs.length;
@@ -6772,6 +6850,7 @@ $('#quit-exam').onclick=()=>{
   examGraded=false;
   document.body.classList.remove('exam-active');
   $('#exam-topbar').style.display='none';
+  $('#qmap-overlay').classList.remove('open');
   $('#exam-area').style.display='none';
   $('#exam-intro').style.display='block';
   $('#exam-questions').innerHTML='';
