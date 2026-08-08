@@ -151,13 +151,34 @@ article.q[hidden]{display:none}
   font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
 .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
 
-.exam-toolbar{
-  position:sticky;top:40px;z-index:20;background:rgba(245,246,248,.94);
-  backdrop-filter:blur(10px);padding:11px 0;margin-bottom:20px;border-bottom:1px solid var(--line);
-  display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.exam-toolbar .progress{font-size:.85rem;color:var(--muted)}
-.exam-toolbar .progress b{color:var(--ink)}
-.exam-timer{font-size:.85rem;color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums}
+/* Exam topbar — replaces topnav during exam */
+.exam-topbar{
+  position:fixed;top:0;left:0;right:0;z-index:60;
+  background:rgba(245,246,248,.97);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);padding:0;
+}
+.exam-topbar-inner{
+  max-width:920px;margin:0 auto;padding:7px 20px;
+  display:flex;align-items:center;gap:12px;flex-wrap:nowrap;
+}
+.exam-topbar .et-set{font-size:.92rem;font-weight:700;color:var(--accent);white-space:nowrap}
+.exam-topbar .et-progress{font-size:.82rem;color:var(--muted);white-space:nowrap}
+.exam-topbar .et-progress b{color:var(--ink)}
+.exam-topbar .et-timer{font-size:.82rem;color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.exam-topbar .et-spacer{flex:1}
+.exam-topbar .et-btn{
+  padding:5px 14px;border:1px solid var(--line);background:#fff;color:var(--ink);
+  border-radius:7px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+.exam-topbar .et-btn:hover{border-color:var(--accent);color:var(--accent)}
+.exam-topbar .et-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.exam-topbar .et-btn.primary:hover{opacity:.88}
+body.exam-active .topnav{display:none}
+body.exam-active footer{display:none}
+body.exam-active .wrap{padding-top:44px}
+
+/* Exam question: no card wrapper */
+.exam-mode article.q{background:transparent;border:none;padding:0;margin-bottom:0}
+.exam-mode .qhead{display:none}
 
 /* Exam question clickable options */
 .exam-mode ol.opts li{cursor:pointer;user-select:none}
@@ -168,7 +189,18 @@ article.q[hidden]{display:none}
 .exam-mode .answer{display:none}
 .exam-mode .tag.missed,.exam-mode .tag.guess{display:none}
 
-/* Graded state */
+/* Exam navigation */
+.exam-nav{display:flex;gap:10px;justify-content:center;margin-top:24px;padding-bottom:30px}
+.exam-nav button{
+  padding:10px 28px;border:1px solid var(--line);background:#fff;color:var(--ink);
+  border-radius:10px;font-size:.9rem;font-weight:600;cursor:pointer;font-family:inherit}
+.exam-nav button:hover{border-color:var(--accent);color:var(--accent)}
+.exam-nav button:disabled{opacity:.35;cursor:not-allowed}
+.exam-nav .qnum-indicator{display:flex;align-items:center;font-size:.88rem;color:var(--muted);font-weight:600}
+
+/* Graded state — show all questions, restore card style */
+.graded article.q{background:var(--card);border:1px solid var(--line);padding:20px 23px;margin-bottom:16px;border-radius:12px;display:block!important}
+.graded .qhead{display:flex}
 .graded ol.opts li.selected[data-correct="1"]{background:var(--ok-soft);border-color:#9fd6bd}
 .graded ol.opts li.selected[data-correct="1"]::before{content:"\2713";background:var(--ok);color:#fff}
 .graded ol.opts li.selected[data-correct="0"]{background:var(--bad-soft);border-color:#f0b4ae}
@@ -177,6 +209,7 @@ article.q[hidden]{display:none}
 .graded ol.opts li:not(.selected)[data-correct="1"]::before{content:"\2713";background:var(--ok);color:#fff}
 .graded ol.opts li{cursor:default}
 .graded .answer{display:block}
+.graded .exam-nav{display:none}
 
 /* Score board */
 .scoreboard{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:32px;text-align:center;margin-bottom:28px}
@@ -208,7 +241,7 @@ footer{margin-top:34px;color:var(--muted);font-size:.8rem;border-top:1px solid v
   .set-cards{grid-template-columns:1fr 1fr}
 }
 @media print{
-  .topnav,.study-toolbar,.exam-toolbar,.reveal,#top,.exam-actions,.result-filter{display:none}
+  .topnav,.study-toolbar,.exam-topbar,.reveal,#top,.exam-actions,.result-filter{display:none}
   body{background:#fff}
   .answer{display:block!important}
   ol.opts li[data-correct="1"]{background:var(--ok-soft)!important;border-color:#9fd6bd!important}
@@ -6423,14 +6456,6 @@ switch (block.type) {
 </div>
 
 <div id="exam-area" style="display:none">
-  <div class="exam-toolbar" id="exam-toolbar">
-    <span class="progress" id="exam-progress">진행: <b>0</b> / 53</span>
-    <span class="exam-timer" id="exam-timer">00:00</span>
-    <span style="margin-left:auto"></span>
-    <button class="btn-secondary" id="submit-exam" style="padding:7px 18px;font-size:.82rem">채점하기</button>
-    <button class="btn-secondary" id="quit-exam" style="padding:7px 18px;font-size:.82rem">그만두기</button>
-  </div>
-
   <div id="scoreboard-area" style="display:none"></div>
   <div id="exam-result-filter" style="display:none" class="result-filter">
     <button class="on" data-filter="all">전체</button>
@@ -6439,6 +6464,11 @@ switch (block.type) {
     <button data-filter="unanswered">미답변</button>
   </div>
   <div id="exam-questions" class="exam-mode"></div>
+  <div class="exam-nav" id="exam-nav">
+    <button id="exam-prev" disabled>&larr; 이전</button>
+    <span class="qnum-indicator" id="exam-qnum">1 / 53</span>
+    <button id="exam-next">다음 &rarr;</button>
+  </div>
 </div>
 
 </div><!-- /panel-exam -->
@@ -6448,6 +6478,17 @@ switch (block.type) {
   정답은 스크린샷 기준이며 일부 오답이 있을 수 있습니다. Udemy 결과 화면과 대조해 주세요.
 </footer>
 </div><!-- /wrap -->
+
+<div class="exam-topbar" id="exam-topbar" style="display:none">
+  <div class="exam-topbar-inner">
+    <span class="et-set" id="et-set">Set 1</span>
+    <span class="et-progress" id="et-progress"><b>0</b> / 53 답변</span>
+    <span class="et-timer" id="et-timer">00:00</span>
+    <span class="et-spacer"></span>
+    <button class="et-btn primary" id="submit-exam">채점하기</button>
+    <button class="et-btn" id="quit-exam">그만두기</button>
+  </div>
+</div>
 
 <button id="top">&uarr; 맨 위로</button>
 
@@ -6528,7 +6569,7 @@ $$('.set-filter').forEach(btn=>{
 });
 
 /* ── Exam mode ── */
-let selectedSet=null, examTimer=null, examSeconds=0, examGraded=false;
+let selectedSet=null, examTimer=null, examSeconds=0, examGraded=false, currentQ=0, totalQ=0;
 
 $$('.set-card').forEach(card=>{
   card.onclick=()=>{
@@ -6538,6 +6579,29 @@ $$('.set-card').forEach(card=>{
     $('#start-exam').disabled=false;
   };
 });
+
+function showQuestion(idx){
+  const qs=$$('#exam-questions article.q');
+  qs.forEach((q,i)=>q.style.display=i===idx?'block':'none');
+  currentQ=idx;
+  $('#exam-prev').disabled=idx===0;
+  $('#exam-next').disabled=idx===qs.length-1;
+  $('#exam-qnum').textContent=`${idx+1} / ${qs.length}`;
+  window.scrollTo(0,0);
+}
+
+function updateProgress(){
+  const qs=$$('#exam-questions article.q');
+  const answered=qs.filter(q=>q.querySelector('ol.opts li.selected')).length;
+  $('#et-progress').innerHTML=`<b>${answered}</b> / ${qs.length} 답변`;
+}
+
+function updateTimer(){
+  examSeconds++;
+  const m=String(Math.floor(examSeconds/60)).padStart(2,'0');
+  const s=String(examSeconds%60).padStart(2,'0');
+  $('#et-timer').textContent=`${m}:${s}`;
+}
 
 $('#start-exam').onclick=()=>{
   if(!selectedSet)return;
@@ -6549,10 +6613,11 @@ $('#start-exam').onclick=()=>{
   $('#scoreboard-area').style.display='none';
   $('#scoreboard-area').innerHTML='';
   $('#exam-result-filter').style.display='none';
+  $('#exam-nav').style.display='flex';
   examGraded=false;
 
   qContainer.innerHTML='';
-  qContainer.classList.remove('graded-mode');
+  qContainer.classList.remove('graded');
 
   const sourceQs=$$(`#study-questions article.q[id^="q${selectedSet}-"]`);
   sourceQs.forEach(sq=>{
@@ -6589,30 +6654,32 @@ $('#start-exam').onclick=()=>{
       if(isMulti){
         li.classList.toggle('selected');
       } else {
-        ol.querySelectorAll('li').forEach(l=>l.classList.remove('selected'));
-        li.classList.add('selected');
+        if(li.classList.contains('selected')){
+          li.classList.remove('selected');
+        } else {
+          ol.querySelectorAll('li').forEach(l=>l.classList.remove('selected'));
+          li.classList.add('selected');
+        }
       }
       updateProgress();
     };
   });
 
+  totalQ=sourceQs.length;
+  currentQ=0;
   examSeconds=0;
+  showQuestion(0);
   updateProgress();
   updateTimer();
   examTimer=setInterval(updateTimer,1000);
+
+  $('#et-set').textContent=`Set ${selectedSet}`;
+  $('#exam-topbar').style.display='block';
+  document.body.classList.add('exam-active');
 };
 
-function updateProgress(){
-  const qs=$$('#exam-questions article.q');
-  const answered=qs.filter(q=>q.querySelector('ol.opts li.selected')).length;
-  $('#exam-progress').innerHTML=`진행: <b>${answered}</b> / ${qs.length}`;
-}
-function updateTimer(){
-  examSeconds++;
-  const m=String(Math.floor(examSeconds/60)).padStart(2,'0');
-  const s=String(examSeconds%60).padStart(2,'0');
-  $('#exam-timer').textContent=`${m}:${s}`;
-}
+$('#exam-prev').onclick=()=>{if(currentQ>0)showQuestion(currentQ-1);};
+$('#exam-next').onclick=()=>{if(currentQ<totalQ-1)showQuestion(currentQ+1);};
 
 $('#submit-exam').onclick=()=>{
   if(examGraded)return;
@@ -6652,6 +6719,8 @@ $('#submit-exam').onclick=()=>{
   });
 
   $('#exam-questions').classList.add('graded');
+  $('#exam-nav').style.display='none';
+  qs.forEach(q=>q.style.display='');
 
   const total=qs.length;
   const pct=Math.round(correct/total*100);
@@ -6701,6 +6770,8 @@ $('#quit-exam').onclick=()=>{
   if(!examGraded&&!confirm('시험을 종료하시겠습니까? 진행 상황이 사라집니다.'))return;
   clearInterval(examTimer);
   examGraded=false;
+  document.body.classList.remove('exam-active');
+  $('#exam-topbar').style.display='none';
   $('#exam-area').style.display='none';
   $('#exam-intro').style.display='block';
   $('#exam-questions').innerHTML='';
