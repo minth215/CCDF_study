@@ -211,10 +211,12 @@ body.exam-active .wrap{padding-top:56px}
 .qmap-cell.current{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
 
 /* Exam question clickable options */
-.exam-mode ol.opts li{cursor:pointer;user-select:none}
-.exam-mode ol.opts li:hover{border-color:var(--accent);background:var(--accent-soft)}
+.exam-mode ol.opts li{cursor:pointer;user-select:none;transition:border-color .15s,background .15s}
+.exam-mode ol.opts li:hover:not(.selected){border-color:#b0bce6;background:#f5f7fd}
 .exam-mode ol.opts li.selected{border-color:var(--accent);background:var(--accent-soft)}
 .exam-mode ol.opts li.selected::before{background:var(--accent);color:#fff}
+.exam-mode ol.opts li.locked{opacity:.55;cursor:not-allowed}
+.exam-mode ol.opts li.locked:hover{border-color:var(--line);background:#fcfcfd}
 .exam-mode .reveal{display:none}
 .exam-mode .answer{display:none}
 .exam-mode .tag.missed,.exam-mode .tag.guess{display:none}
@@ -6726,7 +6728,15 @@ $('#start-exam').onclick=()=>{
       const article=li.closest('article');
       const isMulti=!!article.querySelector('.tag.multi');
       if(isMulti){
-        li.classList.toggle('selected');
+        const maxSel=[...article.querySelectorAll('ol.opts li[data-correct="1"]')].length;
+        if(li.classList.contains('selected')){
+          li.classList.remove('selected');
+        } else {
+          if(li.classList.contains('locked'))return;
+          li.classList.add('selected');
+        }
+        const count=[...ol.querySelectorAll('li.selected')].length;
+        ol.querySelectorAll('li:not(.selected)').forEach(l=>l.classList.toggle('locked',count>=maxSel));
       } else {
         if(li.classList.contains('selected')){
           li.classList.remove('selected');
