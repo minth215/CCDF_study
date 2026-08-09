@@ -558,7 +558,7 @@ footer{margin-top:34px;color:var(--muted);font-size:.8rem;border-top:1px solid v
   <ol class="opts">
     <li data-correct="0"><div class="body"><p class="en">Skip semantic validation whenever all required property names appear in the expected order. The application would follow this approach to validate authorization and business rules before execution.</p><p class="ko">필수 속성 이름이 모두 예상한 순서대로 나타나기만 하면 의미적 검증(semantic validation)을 건너뛴다. 애플리케이션은 이 방식을 따라 실행 전에 권한과 비즈니스 규칙을 검증하게 된다.</p></div></li>
     <li data-correct="1"><div class="body"><p class="en">Check completion status, validate rules and facts, then authorize the downstream action. This would become the basis used to validate authorization and business rules before execution.</p><p class="ko">완료 상태를 확인하고, 규칙과 사실관계를 검증한 다음, 후속 동작(downstream action)을 승인한다. 이것이 실행 전에 권한과 비즈니스 규칙을 검증하는 기준이 된다.</p></div></li>
-    <li data-correct="0" data-wrong="1"><div class="body"><p class="en">Convert the JSON into prose and trust whichever explanation sounds most confident to an operator. The team would then validate authorization and business rules before execution based on that assumption.</p><p class="ko">JSON을 산문(prose)으로 변환한 뒤, 운영자에게 가장 확신에 차 보이는 설명을 신뢰한다. 팀은 그 가정에 근거해 실행 전에 권한과 비즈니스 규칙을 검증하게 된다.</p></div></li>
+    <li data-correct="0"><div class="body"><p class="en">Convert the JSON into prose and trust whichever explanation sounds most confident to an operator. The team would then validate authorization and business rules before execution based on that assumption.</p><p class="ko">JSON을 산문(prose)으로 변환한 뒤, 운영자에게 가장 확신에 차 보이는 설명을 신뢰한다. 팀은 그 가정에 근거해 실행 전에 권한과 비즈니스 규칙을 검증하게 된다.</p></div></li>
     <li data-correct="0"><div class="body"><p class="en">Apply the configuration immediately because strict schema conformance guarantees every target fact and instruction is correct. The design would use this reasoning to validate authorization and business rules before execution before release.</p><p class="ko">엄격한 스키마 준수가 모든 대상 사실과 지시가 올바름을 보장하므로 설정을 즉시 적용한다. 이 설계는 그러한 논리로 배포 전 실행 전에 권한과 비즈니스 규칙을 검증하려 한다.</p></div></li>
   </ol>
   <button class="reveal">정답 보기</button>
@@ -570,7 +570,7 @@ JSON이 스키마에 맞는다는 것은 <b>형태(shape)</b>가 맞다는 뜻�
 
 <b>오답 이유</b>
 • <b>속성 순서로 의미 검증 생략</b> — 키의 등장 순서는 값의 의미와 아무 상관이 없습니다.
-• <b>산문 변환 후 확신도로 판단</b> (선택하신 답) — 모델의 어조가 확신에 차 있다는 것은 정확성의 지표가 전혀 아닙니다. 오히려 틀린 내용을 자신 있게 말하는 경우가 위험합니다.
+• <b>산문 변환 후 확신도로 판단</b> — 모델의 어조가 확신에 차 있다는 것은 정확성의 지표가 전혀 아닙니다. 오히려 틀린 내용을 자신 있게 말하는 경우가 위험합니다.
 • <b>즉시 적용</b> — 스키마 준수를 정확성 보장으로 착각한 전형적인 함정 선택지입니다.
 
 <b>기억할 원칙:</b> 구조 검증(스키마)과 의미 검증(사실·권한·규칙)은 별개의 단계이며, 운영 환경에 쓰기 전에는 둘 다 거쳐야 한다.</div>
