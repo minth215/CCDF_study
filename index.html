@@ -60,6 +60,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
   white-space:nowrap;border-radius:0}
 .topbar .tabs button.on{color:var(--accent);border-bottom-color:var(--accent)}
 .topbar .sp{margin-left:auto;font-size:.8rem;color:var(--muted);white-space:nowrap}
+.topbar .row .sets{margin-left:auto}
 
 /* ---------- 툴바 ---------- */
 .toolbar{position:sticky;z-index:30;background:rgba(244,245,247,.96);backdrop-filter:blur(10px);
@@ -127,8 +128,6 @@ ol.opts li .ko{font-size:.86rem}
 .revealed .answer{display:block}
 .answer .lead{display:block;font-weight:700;color:var(--ok);margin-bottom:9px;white-space:normal}
 body.hide-ko .ko{display:none}
-body.hide-opts article.q ol.opts{display:none}
-body.hide-opts article.q .reveal-btn{display:none}
 .empty{text-align:center;color:var(--muted);padding:60px 20px;font-size:.9rem}
 mark{background:#fff3b0;padding:0 2px;border-radius:3px}
 
@@ -324,17 +323,15 @@ body.exam-active .screen#exam>.wrap{padding-top:56px}
         <button class="on" data-tab="guide">출제 경향</button>
         <button data-tab="browse">문제 풀이</button>
       </div>
-      <span class="sp">총 212문제 · 복수 정답 44</span>
+      <div class="sets" id="studySets" style="display:none"><button class="b on" data-set="all">전체</button><button class="b" data-set="1">Set 1</button><button class="b" data-set="2">Set 2</button><button class="b" data-set="3">Set 3</button><button class="b" data-set="4">Set 4</button></div>
     </div>
   </div>
 
   <div id="tabBrowse" style="display:none">
     <div class="toolbar" style="top:51px">
-      <div class="row sets" id="studySets"><span class="lbl">범위</span><button class="b on" data-set="all">전체 212</button><button class="b" data-set="1">Set 1 · 53</button><button class="b" data-set="2">Set 2 · 53</button><button class="b" data-set="3">Set 3 · 53</button><button class="b" data-set="4">Set 4 · 53</button></div>
       <div class="row">
         <input id="studySearch" type="search" placeholder="검색 — 영문·한글·해설 전체에서 찾기">
         <button class="b" id="allAns">정답 모두 보기</button>
-        <button class="b" id="hideOpts">선택지 숨기기</button>
         <button class="b koToggle">번역 숨기기</button>
         <span class="count" id="studyCount"></span>
       </div>
@@ -855,8 +852,9 @@ function cardHTML(q,mode,idx){
   const lead = `<span class="lead">정답: ${nums.map(n=>n+'번').join(', ')} (초록색 표시)</span>`;
 
   if(mode==='study'){
+    const badgeText = studySet==='all' ? `Set ${q.s} · Q${q.n}` : `Q ${q.n}`;
     return `<article class="q" data-set="${q.s}" data-num="${q.n}" data-multi="${q.m}">
-      <div class="qhead"><span class="badge">Set ${q.s} · Q${q.n}</span>${tag}</div>
+      <div class="qhead"><span class="badge">${badgeText}</span>${tag}</div>
       <div class="qtext"><p class="en">${esc(q.qe)}</p><p class="ko">${q.qk}</p></div>
       ${code}
       <ol class="opts" data-multi="${q.m}">${opts}</ol>
@@ -941,13 +939,6 @@ $('#allAns').onclick=e=>{
   });
 };
 
-/* 선택지 숨기기 */
-$('#hideOpts').onclick=e=>{
-  const hidden=document.body.classList.toggle('hide-opts');
-  e.target.classList.toggle('on',hidden);
-  e.target.textContent=hidden?'선택지 보이기':'선택지 숨기기';
-};
-
 /* 번역 토글 */
 $$('.koToggle').forEach(btn=>btn.onclick=()=>{
   const hidden=document.body.classList.toggle('hide-ko');
@@ -960,6 +951,7 @@ $$('#studyTabs button').forEach(b=>b.onclick=()=>{
   const t=b.dataset.tab;
   $('#tabBrowse').style.display = t==='browse'?'':'none';
   $('#tabGuide').style.display  = t==='guide'?'':'none';
+  $('#studySets').style.display = t==='browse'?'':'none';
   if(t==='browse' && !$('#studyList').innerHTML) studyRender();
   window.scrollTo({top:0});
 });
