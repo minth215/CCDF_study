@@ -73,6 +73,13 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .sets{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
 .sets .lbl{font-size:.78rem;color:var(--muted);margin-right:2px}
 .sets button.b{padding:4px 10px;font-size:.72rem;border-radius:99px}
+.set-select{
+  display:none;appearance:none;-webkit-appearance:none;-moz-appearance:none;
+  border:none;background:transparent
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")
+    no-repeat right center/13px;
+  padding:4px 18px 4px 2px;font-size:.8rem;font-weight:700;color:var(--ink);
+  font-family:inherit;cursor:pointer}
 button.b{padding:8px 12px;border:1px solid var(--line);background:#fff;color:var(--ink);
   border-radius:8px;font-size:.8rem;cursor:pointer;font-family:inherit;white-space:nowrap}
 button.b:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
@@ -297,6 +304,8 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
 @media(max-width:640px){
   .topbar .tabs button{padding:6px 8px;font-size:.78rem}
   .topbar h2{font-size:.88rem}
+  .sets button.b{display:none}
+  .set-select{display:inline-block}
 }
 @media print{
   .topbar,.toolbar,.tabs,.exam-topbar,#top,.chapnav,.exam-nav{display:none!important}
@@ -338,7 +347,7 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
         <button class="on" data-tab="guide">출제 경향</button>
         <button data-tab="browse">문제 풀이</button>
       </div>
-      <div class="sets" id="studySets" style="display:none"><button class="b on" data-set="all">전체</button><button class="b" data-set="1">Set 1</button><button class="b" data-set="2">Set 2</button><button class="b" data-set="3">Set 3</button><button class="b" data-set="4">Set 4</button></div>
+      <div class="sets" id="studySets" style="display:none"><button class="b on" data-set="all">전체</button><button class="b" data-set="1">Set 1</button><button class="b" data-set="2">Set 2</button><button class="b" data-set="3">Set 3</button><button class="b" data-set="4">Set 4</button><select class="set-select" id="studySetSelect"><option value="all">전체</option><option value="1">Set 1</option><option value="2">Set 2</option><option value="3">Set 3</option><option value="4">Set 4</option></select></div>
     </div>
   </div>
 
@@ -965,8 +974,14 @@ function bindStudyReveal(){
 $$('#studySets button').forEach(b=>b.onclick=()=>{
   studySet=b.dataset.set;
   $$('#studySets button').forEach(x=>x.classList.toggle('on',x===b));
+  $('#studySetSelect').value=studySet;
   studyRender(); window.scrollTo({top:0,behavior:'smooth'});
 });
+$('#studySetSelect').onchange=e=>{
+  studySet=e.target.value;
+  $$('#studySets button').forEach(x=>x.classList.toggle('on',x.dataset.set===studySet));
+  studyRender(); window.scrollTo({top:0,behavior:'smooth'});
+};
 $('#studySearch').oninput=e=>{studyQuery=e.target.value; studyRender();};
 
 /* 정답 모두 보기 */
