@@ -64,6 +64,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .topbar .tabs button.on::after{background:var(--accent)}
 .topbar .sp{margin-left:auto;font-size:.8rem;color:var(--muted);white-space:nowrap}
 .topbar .row .sets{margin-left:auto}
+.topbar .row .guide-menu-btn{margin-left:auto}
 
 /* ---------- 툴바 ---------- */
 .toolbar{position:sticky;z-index:30;background:rgba(244,245,247,.96);backdrop-filter:blur(10px);
@@ -80,8 +81,20 @@ body{margin:0;background:var(--bg);color:var(--ink);
     no-repeat right center/13px;
   padding:4px 18px 4px 2px;font-size:.8rem;font-weight:700;color:var(--ink);
   font-family:inherit;cursor:pointer}
+.search-toggle-btn{display:none}
 button.b{padding:8px 12px;border:1px solid var(--line);background:#fff;color:var(--ink);
   border-radius:8px;font-size:.8rem;cursor:pointer;font-family:inherit;white-space:nowrap}
+
+/* iOS 스타일 토글 스위치 */
+.ios-toggle{display:flex;align-items:center;gap:6px;border:none;background:none;
+  cursor:pointer;font-family:inherit;padding:4px 2px}
+.ios-toggle-track{width:34px;height:20px;border-radius:99px;background:#d7dae0;
+  position:relative;flex-shrink:0;transition:background .2s}
+.ios-toggle-knob{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.ios-toggle.on .ios-toggle-track{background:var(--accent)}
+.ios-toggle.on .ios-toggle-knob{transform:translateX(14px)}
+.ios-toggle-text{font-size:.8rem;font-weight:600;color:var(--ink)}
 button.b:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
 button.b:disabled{opacity:.45;cursor:default}
 button.b.on,button.b.on:hover:not(:disabled){background:var(--accent);color:#fff;border-color:var(--accent)}
@@ -251,6 +264,11 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
   display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
 .qmap-cell:hover{border-color:var(--accent);color:var(--accent)}
 .qmap-cell.answered{background:var(--accent-soft);border-color:#c2d0f5;color:var(--accent)}
+
+.chap-menu-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px}
+.chap-menu-list a{padding:11px 14px;border-radius:9px;color:var(--ink);text-decoration:none;
+  font-size:.88rem;font-weight:600;transition:background .15s,color .15s}
+.chap-menu-list a:hover{background:var(--accent-soft);color:var(--accent)}
 .qmap-cell.current{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
 
 /* Exam navigation */
@@ -306,6 +324,10 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
   .topbar h2{font-size:.88rem}
   .sets button.b{display:none}
   .set-select{display:inline-block}
+  .chapnav{display:none}
+  .search-toggle-btn{display:flex}
+  #studySearch{display:none}
+  #studySearchRow.search-expanded #studySearch{display:block;flex:1 1 100%;order:-1}
 }
 @media print{
   .topbar,.toolbar,.tabs,.exam-topbar,#top,.chapnav,.exam-nav{display:none!important}
@@ -348,15 +370,17 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
         <button data-tab="browse">문제 풀이</button>
       </div>
       <div class="sets" id="studySets" style="display:none"><button class="b on" data-set="all">전체</button><button class="b" data-set="1">Set 1</button><button class="b" data-set="2">Set 2</button><button class="b" data-set="3">Set 3</button><button class="b" data-set="4">Set 4</button><select class="set-select" id="studySetSelect"><option value="all">전체</option><option value="1">Set 1</option><option value="2">Set 2</option><option value="3">Set 3</option><option value="4">Set 4</option></select></div>
+      <button class="back-circle guide-menu-btn" id="guideMenuBtn" aria-label="챕터 목록"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg></button>
     </div>
   </div>
 
   <div id="tabBrowse" style="display:none">
     <div class="toolbar" style="top:49px">
-      <div class="row">
+      <div class="row" id="studySearchRow">
+        <button class="back-circle search-toggle-btn" id="searchToggleBtn" aria-label="검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
         <input id="studySearch" type="search" placeholder="검색 — 영문·한글·해설 전체에서 찾기">
-        <button class="b" id="allAns">정답 모두 보기</button>
-        <button class="b koToggle">번역 숨기기</button>
+        <button class="ios-toggle" id="allAns"><span class="ios-toggle-track"><span class="ios-toggle-knob"></span></span><span class="ios-toggle-text">정답</span></button>
+        <button class="ios-toggle koToggle"><span class="ios-toggle-track"><span class="ios-toggle-knob"></span></span><span class="ios-toggle-text">번역</span></button>
         <span class="count" id="studyCount"></span>
       </div>
     </div>
@@ -842,6 +866,15 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
   </div>
 </div>
 
+<div class="qmap-overlay" id="chap-overlay">
+  <div class="qmap-panel">
+    <div class="qmap-inner">
+      <h3>챕터 목록</h3>
+      <div class="chap-menu-list" id="chapMenuList"><a href="#ch1">01. LLM 기본 원리</a><a href="#ch2">02. Messages API 기초</a><a href="#ch3">03. 도구 사용 (Tool Use)</a><a href="#ch4">04. 스트리밍</a><a href="#ch5">05. 컨텍스트 관리</a><a href="#ch6">06. 비용과 성능 최적화</a><a href="#ch7">07. 프롬프트 엔지니어링</a><a href="#ch8">08. 보안과 프라이버시</a><a href="#ch9">09. 에이전트 설계</a><a href="#ch10">10. 개발 도구 생태계</a><a href="#ch11">11. 운영과 릴리스</a><a href="#ch12">12. 요구사항과 소프트웨어 공학</a><a href="#ch13">13. 시험 직전 체크리스트</a></div>
+    </div>
+  </div>
+</div>
+
 <button id="top">&#x2191;</button>
 
 <script>
@@ -984,11 +1017,16 @@ $('#studySetSelect').onchange=e=>{
 };
 $('#studySearch').oninput=e=>{studyQuery=e.target.value; studyRender();};
 
+/* 모바일 검색창 토글 */
+$('#searchToggleBtn').onclick=()=>{
+  const expanded=$('#studySearchRow').classList.toggle('search-expanded');
+  if(expanded) $('#studySearch').focus();
+};
+
 /* 정답 모두 보기 */
-$('#allAns').onclick=e=>{
+$('#allAns').onclick=()=>{
   allRevealed=!allRevealed;
-  e.target.classList.toggle('on',allRevealed);
-  e.target.textContent=allRevealed?'정답 모두 숨기기':'정답 모두 보기';
+  $('#allAns').classList.toggle('on',allRevealed);
   $$('#studyList article.q').forEach(c=>{
     c.classList.toggle('revealed',allRevealed);
     const b=c.querySelector('.reveal-btn');
@@ -999,7 +1037,7 @@ $('#allAns').onclick=e=>{
 /* 번역 토글 */
 $$('.koToggle').forEach(btn=>btn.onclick=()=>{
   const hidden=document.body.classList.toggle('hide-ko');
-  $$('.koToggle').forEach(b=>{b.classList.toggle('on',hidden);b.textContent=hidden?'번역 보이기':'번역 숨기기';});
+  $$('.koToggle').forEach(b=>b.classList.toggle('on',hidden));
 });
 
 /* 탭 */
@@ -1009,9 +1047,15 @@ $$('#studyTabs button').forEach(b=>b.onclick=()=>{
   $('#tabBrowse').style.display = t==='browse'?'':'none';
   $('#tabGuide').style.display  = t==='guide'?'':'none';
   $('#studySets').style.display = t==='browse'?'':'none';
+  $('#guideMenuBtn').style.display = t==='guide'?'':'none';
   if(t==='browse' && !$('#studyList').innerHTML) studyRender();
   window.scrollTo({top:0});
 });
+
+/* 출제 경향 챕터 메뉴 */
+$('#guideMenuBtn').onclick=()=>$('#chap-overlay').classList.toggle('open');
+$('#chap-overlay').onclick=e=>{if(e.target===$('#chap-overlay'))$('#chap-overlay').classList.remove('open');};
+$$('#chapMenuList a').forEach(a=>a.onclick=()=>$('#chap-overlay').classList.remove('open'));
 
 /* ================= 모의고사 ================= */
 let examTimer=null, examSeconds=0, examGraded=false, currentQ=0, totalQ=0, examItems=[], selectedExamSet=null;
