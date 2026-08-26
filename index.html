@@ -194,14 +194,14 @@ table.cmp td:first-child{white-space:nowrap;width:1%}
 .exam-topbar .et-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
 .exam-topbar .et-btn.primary:hover{opacity:.88}
 body.exam-active .topbar{display:none!important}
-body.exam-active .screen#exam>.wrap{padding-top:56px}
+body.exam-active .screen#exam .wrap{padding-top:68px}
 
 /* Exam mode cards */
 .exam-mode article.q{background:transparent;border:none;padding:0;margin-bottom:0}
 .exam-mode .qhead{display:none}
 .exam-qbadge{
-  display:inline-block;font-size:.82rem;font-weight:700;color:var(--accent);
-  background:var(--accent-soft);padding:3px 12px;border-radius:8px;margin-bottom:12px}
+  display:inline-block;font-size:.72rem;font-weight:700;color:var(--accent);
+  background:var(--accent-soft);padding:3px 9px;border-radius:999px;margin-bottom:12px}
 .exam-mode ol.opts li{cursor:pointer;user-select:none}
 .exam-mode ol.opts li:hover:not(.selected){border-color:#b0bce6;background:#f5f7fd}
 .exam-mode ol.opts li.selected{border-color:var(--accent);background:var(--accent-soft)}
@@ -235,13 +235,15 @@ body.exam-active .screen#exam>.wrap{padding-top:56px}
 .qmap-cell.current{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
 
 /* Exam navigation */
-.exam-nav{display:flex;gap:10px;justify-content:center;margin-top:24px;padding-bottom:30px}
-.exam-nav button{
-  padding:10px 28px;border:1px solid var(--line);background:#fff;color:var(--ink);
-  border-radius:10px;font-size:.9rem;font-weight:600;cursor:pointer;font-family:inherit}
-.exam-nav button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
-.exam-nav button:disabled{opacity:.35;cursor:not-allowed}
-.exam-nav .qnum-indicator{display:flex;align-items:center;font-size:.88rem;color:var(--muted);font-weight:600}
+.exam-nav{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:24px;padding-bottom:30px}
+.exam-nav-circle{
+  width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--ink);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;flex-shrink:0;
+  transition:border-color .15s,color .15s}
+.exam-nav-circle:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.exam-nav-circle:disabled{opacity:.35;cursor:not-allowed}
+.exam-nav-circle svg{width:18px;height:18px}
+.exam-nav .qnum-indicator{display:flex;align-items:center;font-size:.88rem;color:var(--muted);font-weight:600;min-width:64px;justify-content:center}
 
 /* Graded state */
 .graded article.q{background:var(--card);border:1px solid var(--line);padding:20px 23px;margin-bottom:16px;border-radius:12px;display:block!important}
@@ -790,9 +792,9 @@ body.exam-active .screen#exam>.wrap{padding-top:56px}
       </div>
       <div id="examQuestions" class="exam-mode"></div>
       <div class="exam-nav" id="exam-nav">
-        <button id="exam-prev" disabled>&#x2190; 이전</button>
+        <button class="exam-nav-circle" id="exam-prev" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
         <span class="qnum-indicator" id="exam-qnum">1 / 53</span>
-        <button id="exam-next">다음 &#x2192;</button>
+        <button class="exam-nav-circle" id="exam-next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
       </div>
     </div>
   </div>
@@ -965,7 +967,7 @@ function startExam(set){
   qContainer.classList.remove('graded');
   qContainer.innerHTML=examItems.map((x,i)=>{
     let h=cardHTML(x,'exam',i);
-    const badge=`<div class="exam-qbadge">Q${i+1}</div>`;
+    const badge=`<div class="exam-qbadge">Q ${i+1}</div>`;
     h=h.replace('<div class="qhead">',badge+'<div class="qhead">');
     return h;
   }).join('');
@@ -1182,11 +1184,7 @@ $$('#exam-result-filter button').forEach(btn=>{
 });
 
 $('#quit-exam').onclick=()=>{
-  if(!examGraded){
-    const qs=$$('#examQuestions article.q');
-    const answered=qs.filter(q=>q.querySelector('ol.opts li.selected')).length;
-    if(answered>0&&!confirm('시험을 종료하시겠습니까? 진행 상황이 사라집니다.'))return;
-  }
+  if(!confirm('종료 시 진행 상황은 저장되지 않습니다. 정말 종료할까요?'))return;
   clearInterval(examTimer);
   examGraded=false;
   document.body.classList.remove('exam-active');
