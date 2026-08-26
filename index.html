@@ -119,7 +119,7 @@ article.q{background:var(--card);border:1px solid var(--line);border-radius:12px
   padding:3px 9px;border-radius:999px}
 .tag{font-size:.7rem;padding:3px 8px;border-radius:999px;font-weight:600;background:#f3e8ff;color:#6b21a8}
 .en{margin:0}
-.ko{margin:5px 0 0;color:var(--ko);font-size:.9rem;border-left:3px solid #dfe3e8;padding-left:11px}
+.ko{margin:5px 0 0;color:var(--ko);font-size:.8rem}
 .qtext .en{font-weight:600;font-size:1.01rem}
 .qtext{margin-bottom:12px}
 pre{background:var(--code);border:1px solid var(--line);border-radius:8px;
@@ -326,6 +326,19 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
   align-items:center;justify-content:center}
 #top:hover{border-color:var(--accent);color:var(--accent)}
 #top.on{display:flex}
+
+.search-nav{
+  position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:44;
+  display:none;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);
+  border-radius:999px;padding:6px 10px;box-shadow:0 4px 16px rgba(0,0,0,.14)}
+.search-nav.show{display:flex}
+.search-nav-btn{
+  width:28px;height:28px;border-radius:50%;border:none;background:#eceef1;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.search-nav-btn svg{width:15px;height:15px}
+.search-nav-btn:hover:not(:disabled){background:var(--accent-soft);color:var(--accent)}
+.search-nav-btn:disabled{opacity:.35;cursor:not-allowed}
+.search-nav-count{font-size:.82rem;font-weight:700;color:var(--ink);white-space:nowrap;min-width:44px;text-align:center}
 
 @media(max-width:640px){
   .toolbar{top:48px}
@@ -901,6 +914,12 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
 
 <button id="top">&#x2191;</button>
 
+<div class="search-nav" id="searchNav">
+  <button class="search-nav-btn" id="searchPrev" aria-label="이전 검색 결과"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg></button>
+  <span class="search-nav-count" id="searchNavCount">1 / 0</span>
+  <button class="search-nav-btn" id="searchNext" aria-label="다음 검색 결과"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+</div>
+
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1000,7 +1019,27 @@ function studyRender(){
     $$('#studyList article.q').forEach(c=>c.classList.add('revealed'));
     $$('#studyList .reveal-btn').forEach(b=>b.textContent='정답 숨기기');
   }
+  updateSearchNav(q ? items.length : 0);
 }
+
+/* 검색 결과 이전/다음 이동 */
+let searchResultIndex=0;
+function updateSearchNav(count){
+  const nav=$('#searchNav');
+  if(!count){ nav.classList.remove('show'); return; }
+  if(searchResultIndex>=count) searchResultIndex=0;
+  nav.classList.add('show');
+  $('#searchNavCount').textContent=`${searchResultIndex+1} / ${count}`;
+}
+function goToSearchResult(delta){
+  const items=$$('#studyList article.q');
+  if(!items.length) return;
+  searchResultIndex=(searchResultIndex+delta+items.length)%items.length;
+  $('#searchNavCount').textContent=`${searchResultIndex+1} / ${items.length}`;
+  items[searchResultIndex].scrollIntoView({behavior:'smooth',block:'center'});
+}
+$('#searchPrev').onclick=()=>goToSearchResult(-1);
+$('#searchNext').onclick=()=>goToSearchResult(1);
 function highlight(root,term){
   const walk=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
   const hits=[]; let n;
@@ -1039,7 +1078,7 @@ $('#studySetSelect').onchange=e=>{
   $$('#studySets button').forEach(x=>x.classList.toggle('on',x.dataset.set===studySet));
   studyRender(); window.scrollTo({top:0,behavior:'smooth'});
 };
-$('#studySearch').oninput=e=>{studyQuery=e.target.value; studyRender();};
+$('#studySearch').oninput=e=>{studyQuery=e.target.value; searchResultIndex=0; studyRender();};
 
 /* 모바일 검색창 토글 */
 $('#searchToggleBtn').onclick=()=>{
@@ -1078,7 +1117,9 @@ $$('#studyTabs button').forEach(b=>b.onclick=()=>{
   $('#tabGuide').style.display  = t==='guide'?'':'none';
   $('#studySets').style.display = t==='browse'?'':'none';
   $('#guideMenuBtn').style.display = t==='guide'?'':'none';
+  if(t!=='browse') $('#searchNav').classList.remove('show');
   if(t==='browse' && !$('#studyList').innerHTML) studyRender();
+  else if(t==='browse') updateSearchNav(studyQuery.trim() ? $$('#studyList article.q').length : 0);
   window.scrollTo({top:0});
 });
 
