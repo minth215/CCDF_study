@@ -59,7 +59,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .topbar .tabs button{position:relative;border:none;background:none;padding:6px 10px;font-size:.85rem;
   cursor:pointer;font-family:inherit;color:var(--muted);font-weight:600;
   white-space:nowrap;border-radius:0}
-.topbar .tabs button::after{content:"";position:absolute;left:10px;right:10px;bottom:-10px;height:2px;background:transparent}
+.topbar .tabs button::after{content:"";position:absolute;left:3px;right:3px;bottom:-10px;height:2px;background:transparent}
 .topbar .tabs button.on{color:var(--accent)}
 .topbar .tabs button.on::after{background:var(--accent)}
 .topbar .sp{margin-left:auto;font-size:.8rem;color:var(--muted);white-space:nowrap}
@@ -67,7 +67,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .topbar .row .guide-menu-btn{margin-left:auto}
 
 /* ---------- 툴바 ---------- */
-.toolbar{position:sticky;z-index:30;background:rgba(244,245,247,.96);backdrop-filter:blur(10px);
+.toolbar{position:sticky;top:49px;z-index:30;background:rgba(244,245,247,.96);backdrop-filter:blur(10px);
   padding:10px 0}
 .toolbar .row{max-width:900px;margin:0 auto;padding:0 20px;display:flex;flex-wrap:wrap;gap:7px;align-items:center}
 .toolbar .row+.row{margin-top:7px}
@@ -82,6 +82,8 @@ body{margin:0;background:var(--bg);color:var(--ink);
   padding:4px 18px 4px 2px;font-size:.8rem;font-weight:700;color:var(--ink);
   font-family:inherit;cursor:pointer}
 .search-toggle-btn{display:none}
+.search-expand{display:contents}
+.search-close-btn{display:none}
 button.b{padding:8px 12px;border:1px solid var(--line);background:#fff;color:var(--ink);
   border-radius:8px;font-size:.8rem;cursor:pointer;font-family:inherit;white-space:nowrap}
 
@@ -104,6 +106,7 @@ button.b.pri:hover:not(:disabled){background:var(--accent-dk)}
 input[type=search]{flex:1 1 200px;min-width:150px;padding:8px 12px;border:1px solid var(--line);
   border-radius:8px;font-size:.85rem;background:#fff;color:var(--ink);font-family:inherit}
 input[type=search]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
 .count{margin-left:auto;color:var(--muted);font-size:.8rem;white-space:nowrap}
 .count b{color:var(--accent)}
 
@@ -227,6 +230,11 @@ table.cmp td:first-child{white-space:nowrap;width:1%}
 .exam-topbar .et-btn.primary:hover{opacity:.88}
 body.exam-active .topbar{display:none!important}
 body.exam-active .screen#exam .wrap{padding-top:68px}
+@media(max-width:640px){
+  .exam-topbar-inner{padding:7px 14px;gap:6px}
+  .exam-topbar .et-timer{display:none}
+  .exam-topbar .et-btn{padding:5px 10px;font-size:.72rem}
+}
 
 /* Exam mode cards */
 .exam-mode article.q{background:transparent;border:none;padding:0;margin-bottom:0}
@@ -320,14 +328,27 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
 #top.on{display:flex}
 
 @media(max-width:640px){
+  .toolbar{top:48px}
   .topbar .tabs button{padding:6px 8px;font-size:.78rem}
   .topbar h2{font-size:.88rem}
   .sets button.b{display:none}
   .set-select{display:inline-block}
   .chapnav{display:none}
+  .count{display:none}
   .search-toggle-btn{display:flex}
-  #studySearch{display:none}
-  #studySearchRow.search-expanded #studySearch{display:block;flex:1 1 100%;order:-1}
+  .search-expand{
+    display:none;position:absolute;inset:0;z-index:6;
+    align-items:center;gap:8px;background:#fff;border:1px solid var(--line);
+    border-radius:999px;padding:0 6px 0 16px}
+  #studySearchRow.search-expanded .search-expand{display:flex}
+  #studySearchRow{position:relative}
+  .search-expand #studySearch{
+    display:block;flex:1;border:none;outline:none;background:transparent;
+    padding:8px 0;font-size:.85rem;font-family:inherit;min-width:0}
+  .search-close-btn{
+    width:26px;height:26px;border-radius:50%;border:none;background:#e7e9ed;color:var(--muted);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+  .search-close-btn svg{width:13px;height:13px}
 }
 @media print{
   .topbar,.toolbar,.tabs,.exam-topbar,#top,.chapnav,.exam-nav{display:none!important}
@@ -375,12 +396,15 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
   </div>
 
   <div id="tabBrowse" style="display:none">
-    <div class="toolbar" style="top:49px">
+    <div class="toolbar" id="studyToolbar">
       <div class="row" id="studySearchRow">
         <button class="back-circle search-toggle-btn" id="searchToggleBtn" aria-label="검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
-        <input id="studySearch" type="search" placeholder="검색 — 영문·한글·해설 전체에서 찾기">
-        <button class="ios-toggle" id="allAns"><span class="ios-toggle-track"><span class="ios-toggle-knob"></span></span><span class="ios-toggle-text">정답</span></button>
-        <button class="ios-toggle koToggle"><span class="ios-toggle-track"><span class="ios-toggle-knob"></span></span><span class="ios-toggle-text">번역</span></button>
+        <div class="search-expand">
+          <input id="studySearch" type="search" placeholder="검색 — 영문·한글·해설 전체에서 찾기">
+          <button class="search-close-btn" id="searchCloseBtn" aria-label="검색 닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="6" y1="18" x2="18" y2="6"></line></svg></button>
+        </div>
+        <button class="ios-toggle" id="allAns"><span class="ios-toggle-text">정답</span><span class="ios-toggle-track"><span class="ios-toggle-knob"></span></span></button>
+        <button class="ios-toggle koToggle"><span class="ios-toggle-text">번역</span><span class="ios-toggle-track"><span class="ios-toggle-knob"></span></span></button>
         <span class="count" id="studyCount"></span>
       </div>
     </div>
@@ -818,8 +842,8 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
       <button data-set="4"><div class="t">Set 4</div><div class="d">53문제</div></button>
     </div>
     <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <button class="b on" id="shuffle-exam">선택지 섞기</button>
-      <button class="b" id="hide-ko-exam">번역 숨기기</button>
+      <button class="ios-toggle on" id="shuffle-exam"><span class="ios-toggle-text">선택지 섞기</span><span class="ios-toggle-track"><span class="ios-toggle-knob"></span></span></button>
+      <button class="ios-toggle" id="hide-ko-exam"><span class="ios-toggle-text">번역 숨기기</span><span class="ios-toggle-track"><span class="ios-toggle-knob"></span></span></button>
     </div>
     <div class="note">
       진행 상황은 브라우저에 저장되지 않습니다. 새로고침하거나 탭을 닫으면 고른 답이 사라집니다.
@@ -1019,8 +1043,14 @@ $('#studySearch').oninput=e=>{studyQuery=e.target.value; studyRender();};
 
 /* 모바일 검색창 토글 */
 $('#searchToggleBtn').onclick=()=>{
-  const expanded=$('#studySearchRow').classList.toggle('search-expanded');
-  if(expanded) $('#studySearch').focus();
+  $('#studySearchRow').classList.add('search-expanded');
+  $('#studySearch').focus();
+};
+$('#searchCloseBtn').onclick=()=>{
+  $('#studySearchRow').classList.remove('search-expanded');
+  $('#studySearch').value='';
+  studyQuery='';
+  studyRender();
 };
 
 /* 정답 모두 보기 */
@@ -1166,8 +1196,8 @@ function updateExamTimer(){
 }
 
 $$('#examPick button').forEach(b=>b.onclick=()=>startExam(b.dataset.set));
-$('#shuffle-exam').onclick=e=>e.target.classList.toggle('on');
-$('#hide-ko-exam').onclick=e=>e.target.classList.toggle('on');
+$('#shuffle-exam').onclick=()=>$('#shuffle-exam').classList.toggle('on');
+$('#hide-ko-exam').onclick=()=>$('#hide-ko-exam').classList.toggle('on');
 
 $('#exam-prev').onclick=()=>{if(currentQ>0)showQuestion(currentQ-1);};
 $('#exam-next').onclick=()=>{if(currentQ<totalQ-1)showQuestion(currentQ+1);};
