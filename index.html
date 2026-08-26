@@ -45,19 +45,20 @@ body{margin:0;background:var(--bg);color:var(--ink);
 /* ---------- 상단 바 ---------- */
 .topbar{position:sticky;top:0;z-index:40;background:rgba(244,245,247,.96);
   backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.topbar .row{max-width:900px;margin:0 auto;padding:11px 20px;display:flex;align-items:center;gap:10px}
+.topbar .row{max-width:900px;margin:0 auto;padding:8px 20px 0;display:flex;align-items:center;gap:10px}
 .back-circle{
-  width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:#fff;
+  width:26px;height:26px;border-radius:50%;border:none;background:#e7e9ed;
   display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
-  font-size:.9rem;color:var(--ink);transition:border-color .15s,color .15s}
-.back-circle:hover{border-color:var(--accent);color:var(--accent)}
-.topbar h2{font-size:.95rem;margin:0;font-weight:700;white-space:nowrap}
+  color:var(--muted);transition:background .15s,color .15s}
+.back-circle:hover{background:var(--accent-soft);color:var(--accent)}
+.back-circle svg{width:14px;height:14px}
+.topbar h2{font-size:.92rem;margin:0;font-weight:700;white-space:nowrap}
 
-/* 탭 — 상단바와 같은 라인 */
-.topbar .tabs{display:flex;gap:2px;margin-left:8px}
-.topbar .tabs button{border:none;background:none;padding:7px 12px;font-size:.85rem;
+/* 탭 — 상단바와 같은 라인, 밑줄이 상단바 하단 경계선과 겹치도록 정렬 */
+.topbar .tabs{display:flex;gap:2px;margin-left:8px;align-self:stretch}
+.topbar .tabs button{border:none;background:none;padding:0 10px;font-size:.85rem;
   cursor:pointer;font-family:inherit;color:var(--muted);border-bottom:2px solid transparent;font-weight:600;
-  white-space:nowrap;border-radius:0}
+  white-space:nowrap;border-radius:0;display:flex;align-items:center}
 .topbar .tabs button.on{color:var(--accent);border-bottom-color:var(--accent)}
 .topbar .sp{margin-left:auto;font-size:.8rem;color:var(--muted);white-space:nowrap}
 .topbar .row .sets{margin-left:auto}
@@ -69,7 +70,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .toolbar .row+.row{margin-top:7px}
 .sets{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
 .sets .lbl{font-size:.78rem;color:var(--muted);margin-right:2px}
-.sets button{padding:5px 12px;font-size:.78rem;border-radius:99px}
+.sets button.b{padding:4px 10px;font-size:.72rem;border-radius:99px}
 button.b{padding:8px 12px;border:1px solid var(--line);background:#fff;color:var(--ink);
   border-radius:8px;font-size:.8rem;cursor:pointer;font-family:inherit;white-space:nowrap}
 button.b:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
@@ -129,7 +130,7 @@ ol.opts li .ko{font-size:.86rem}
 .answer .lead{display:block;font-weight:700;color:var(--ok);margin-bottom:9px;white-space:normal}
 body.hide-ko .ko{display:none}
 .empty{text-align:center;color:var(--muted);padding:60px 20px;font-size:.9rem}
-mark{background:#fff3b0;padding:0 2px;border-radius:3px}
+mark{background:#fff3b0;padding:0;border-radius:2px}
 
 /* ---------- 출제 경향 ---------- */
 #guide{padding:22px 0 90px}
@@ -280,7 +281,7 @@ body.exam-active .screen#exam>.wrap{padding-top:56px}
 #top.on{display:flex}
 
 @media(max-width:640px){
-  .topbar .tabs button{padding:7px 8px;font-size:.78rem}
+  .topbar .tabs button{padding:0 8px;font-size:.78rem}
   .topbar h2{font-size:.88rem}
 }
 @media print{
@@ -317,7 +318,7 @@ body.exam-active .screen#exam>.wrap{padding-top:56px}
 <section class="screen" id="study">
   <div class="topbar" id="studyTopbar">
     <div class="row">
-      <button class="back-circle" data-go="home">&#x3C;</button>
+      <button class="back-circle" data-go="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
       <h2>학습하기</h2>
       <div class="tabs" id="studyTabs">
         <button class="on" data-tab="guide">출제 경향</button>
@@ -328,7 +329,7 @@ body.exam-active .screen#exam>.wrap{padding-top:56px}
   </div>
 
   <div id="tabBrowse" style="display:none">
-    <div class="toolbar" style="top:51px">
+    <div class="toolbar" style="top:35px">
       <div class="row">
         <input id="studySearch" type="search" placeholder="검색 — 영문·한글·해설 전체에서 찾기">
         <button class="b" id="allAns">정답 모두 보기</button>
@@ -755,7 +756,7 @@ body.exam-active .screen#exam>.wrap{padding-top:56px}
 <section class="screen" id="exam">
   <div class="topbar" id="examTopbarNav">
     <div class="row">
-      <button class="back-circle" data-go="home">&#x3C;</button>
+      <button class="back-circle" data-go="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
       <h2 id="examTitle">모의고사</h2>
     </div>
   </div>
