@@ -137,7 +137,7 @@ ol.opts li::before{content:counter(o);flex:0 0 21px;height:21px;border-radius:50
 ol.opts[data-multi="1"] li::before{border-radius:5px}
 ol.opts li .body{flex:1;min-width:0}
 ol.opts li .en{font-size:.92rem}
-ol.opts li .ko{font-size:.86rem}
+ol.opts li .ko{font-size:.78rem}
 
 /* 선택지 직접 선택 (학습·모의고사 공통) */
 ol.opts li{cursor:pointer;user-select:none}
@@ -153,16 +153,24 @@ ol.opts li.locked:hover{border-color:var(--line);background:#fcfcfd}
 .revealed ol.opts li.selected[data-correct="0"]{background:var(--bad-soft);border-color:var(--bad-line)}
 .revealed ol.opts li.selected[data-correct="0"]::before{content:"\2717";background:var(--bad);color:#fff}
 
-.reveal-btn{margin-top:5px;padding:6px 14px;border:1px solid var(--line);background:#fff;
-  color:var(--ink);border-radius:7px;font-size:.78rem;cursor:pointer;font-family:inherit}
-.reveal-btn:hover{border-color:var(--accent);color:var(--accent)}
+.card-toggles{margin-left:auto;display:flex;gap:12px;align-items:center}
+.mini-toggle{display:flex;align-items:center;gap:5px;border:none;background:none;
+  cursor:pointer;font-family:inherit;padding:2px}
+.mini-toggle-label{font-size:.72rem;font-weight:600;color:var(--muted)}
+.mini-toggle-track{width:28px;height:16px;border-radius:99px;background:#d7dae0;
+  position:relative;flex-shrink:0;transition:background .2s}
+.mini-toggle-knob{position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .2s}
+.mini-toggle.on .mini-toggle-track{background:var(--accent)}
+.mini-toggle.on .mini-toggle-knob{transform:translateX(12px)}
+.mini-toggle.on .mini-toggle-label{color:var(--ink)}
 
 .answer{display:none;margin-top:12px;padding:14px 17px;background:var(--soft);
   border:1px solid var(--line);border-left:3px solid var(--ok);border-radius:0 9px 9px 0;
   font-size:.89rem;white-space:pre-wrap;line-height:1.72}
 .revealed .answer{display:block}
 .answer .lead{display:block;font-weight:700;color:var(--ok);margin-bottom:9px;white-space:normal}
-body.hide-ko .ko{display:none}
+article.q.ko-off .ko{display:none}
 .empty{text-align:center;color:var(--muted);padding:60px 20px;font-size:.9rem}
 mark{background:#fff3b0;padding:0;border-radius:2px}
 
@@ -247,7 +255,6 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
 .exam-mode ol.opts li.selected::before{background:var(--accent);color:#fff}
 .exam-mode ol.opts li.locked{opacity:.55;cursor:not-allowed}
 .exam-mode ol.opts li.locked:hover{border-color:var(--line);background:#fcfcfd}
-.exam-mode .reveal-btn{display:none}
 .exam-mode .answer{display:none}
 
 /* Question map modal */
@@ -412,7 +419,7 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
           <button class="search-close-btn" id="searchCloseBtn" aria-label="검색 닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="6" y1="18" x2="18" y2="6"></line></svg></button>
         </div>
         <button class="ios-toggle" id="allAns"><span class="ios-toggle-text">정답</span><span class="ios-toggle-track"><span class="ios-toggle-knob"></span></span></button>
-        <button class="ios-toggle koToggle"><span class="ios-toggle-text">번역</span><span class="ios-toggle-track"><span class="ios-toggle-knob"></span></span></button>
+        <button class="ios-toggle koToggle on"><span class="ios-toggle-text">번역</span><span class="ios-toggle-track"><span class="ios-toggle-knob"></span></span></button>
         <span class="count" id="studyCount"></span>
       </div>
     </div>
@@ -946,12 +953,19 @@ function cardHTML(q,mode,idx){
 
   if(mode==='study'){
     const badgeText = studySet==='all' ? `Set ${q.s} · Q${q.n}` : `Q ${q.n}`;
-    return `<article class="q" data-set="${q.s}" data-num="${q.n}" data-multi="${q.m}">
-      <div class="qhead"><span class="badge">${badgeText}</span>${tag}</div>
+    const revealOn = allRevealed ? ' on' : '';
+    const koOn = allKoShown ? ' on' : '';
+    const cardCls = 'q' + (allRevealed?' revealed':'') + (allKoShown?'':' ko-off');
+    return `<article class="${cardCls}" data-set="${q.s}" data-num="${q.n}" data-multi="${q.m}">
+      <div class="qhead"><span class="badge">${badgeText}</span>${tag}
+        <div class="card-toggles">
+          <button class="mini-toggle reveal-toggle${revealOn}"><span class="mini-toggle-label">정답</span><span class="mini-toggle-track"><span class="mini-toggle-knob"></span></span></button>
+          <button class="mini-toggle ko-toggle${koOn}"><span class="mini-toggle-label">번역</span><span class="mini-toggle-track"><span class="mini-toggle-knob"></span></span></button>
+        </div>
+      </div>
       <div class="qtext"><p class="en">${esc(q.qe)}</p><p class="ko">${q.qk}</p></div>
       ${code}
       <ol class="opts" data-multi="${q.m}">${opts}</ol>
-      <button class="reveal-btn">정답 보기</button>
       <div class="answer">${lead}${q.x}</div>
     </article>`;
   } else {
@@ -997,7 +1011,7 @@ function bindOptionSelection(container,opts={}){
 }
 
 /* ================= 학습하기 · 문제 풀이 ================= */
-let studySet='all', studyQuery='', allRevealed=false;
+let studySet='all', studyQuery='', allRevealed=false, allKoShown=true;
 function studyRender(){
   const q=studyQuery.trim().toLowerCase();
   const items=QUESTIONS.filter(x=>{
@@ -1011,13 +1025,23 @@ function studyRender(){
     ? items.map((x,i)=>cardHTML(x,'study',i)).join('')
     : '<div class="empty">검색 결과가 없습니다.</div>';
   if(q) highlight($('#studyList'), q);
-  bindStudyReveal();
+  bindCardToggles();
   bindOptionSelection($('#studyList'));
-  if(allRevealed){
-    $$('#studyList article.q').forEach(c=>c.classList.add('revealed'));
-    $$('#studyList .reveal-btn').forEach(b=>b.textContent='정답 숨기기');
-  }
   updateSearchNav(q ? items.length : 0);
+}
+function bindCardToggles(){
+  $$('#studyList .reveal-toggle').forEach(btn=>btn.onclick=()=>{
+    const c=btn.closest('article');
+    const on=!btn.classList.contains('on');
+    btn.classList.toggle('on',on);
+    c.classList.toggle('revealed',on);
+  });
+  $$('#studyList .ko-toggle').forEach(btn=>btn.onclick=()=>{
+    const c=btn.closest('article');
+    const on=!btn.classList.contains('on');
+    btn.classList.toggle('on',on);
+    c.classList.toggle('ko-off',!on);
+  });
 }
 
 /* 검색 결과 이전/다음 이동 */
@@ -1056,15 +1080,6 @@ function highlight(root,term){
     node.parentNode.replaceChild(frag,node);
   });
 }
-function bindStudyReveal(){
-  $$('#studyList .reveal-btn').forEach(b=>b.onclick=()=>{
-    const c=b.closest('article');
-    const on=!c.classList.contains('revealed');
-    c.classList.toggle('revealed',on);
-    b.textContent=on?'정답 숨기기':'정답 보기';
-  });
-}
-
 $$('#studySets button').forEach(b=>b.onclick=()=>{
   studySet=b.dataset.set;
   $$('#studySets button').forEach(x=>x.classList.toggle('on',x===b));
@@ -1090,21 +1105,26 @@ $('#searchCloseBtn').onclick=()=>{
   studyRender();
 };
 
-/* 정답 모두 보기 */
+/* 정답 모두 보기 — 모든 카드의 개별 정답 토글을 일괄 설정 */
 $('#allAns').onclick=()=>{
   allRevealed=!allRevealed;
   $('#allAns').classList.toggle('on',allRevealed);
   $$('#studyList article.q').forEach(c=>{
     c.classList.toggle('revealed',allRevealed);
-    const b=c.querySelector('.reveal-btn');
-    if(b) b.textContent=allRevealed?'정답 숨기기':'정답 보기';
+    const t=c.querySelector('.reveal-toggle');
+    if(t) t.classList.toggle('on',allRevealed);
   });
 };
 
-/* 번역 토글 */
+/* 번역 토글 — on = 번역 보임(기본값), off = 번역 숨김. 모든 카드에 일괄 적용 */
 $$('.koToggle').forEach(btn=>btn.onclick=()=>{
-  const hidden=document.body.classList.toggle('hide-ko');
-  $$('.koToggle').forEach(b=>b.classList.toggle('on',hidden));
+  allKoShown=!btn.classList.contains('on');
+  $$('.koToggle').forEach(b=>b.classList.toggle('on',allKoShown));
+  $$('#studyList article.q').forEach(c=>{
+    c.classList.toggle('ko-off',!allKoShown);
+    const t=c.querySelector('.ko-toggle');
+    if(t) t.classList.toggle('on',allKoShown);
+  });
 });
 
 /* 탭 */
