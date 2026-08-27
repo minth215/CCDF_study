@@ -1113,8 +1113,27 @@ $('#searchCloseBtn').onclick=()=>{
   studyRender();
 };
 
+/* 토글 전후 보고 있던 문제의 화면 위치를 유지 */
+function currentAnchorCard(){
+  const topbarH=$('#studyTopbar').getBoundingClientRect().height;
+  const cards=$$('#studyList article.q');
+  for(const c of cards){
+    if(c.getBoundingClientRect().bottom>topbarH) return c;
+  }
+  return cards[0]||null;
+}
+function withScrollAnchor(fn){
+  const anchor=currentAnchorCard();
+  const before=anchor?anchor.getBoundingClientRect().top:null;
+  fn();
+  if(anchor && before!==null){
+    const after=anchor.getBoundingClientRect().top;
+    if(after!==before) window.scrollBy(0,after-before);
+  }
+}
+
 /* 정답 모두 보기 — 모든 카드의 개별 정답 토글을 일괄 설정 */
-$('#allAns').onclick=()=>{
+$('#allAns').onclick=()=>withScrollAnchor(()=>{
   allRevealed=!allRevealed;
   $('#allAns').classList.toggle('on',allRevealed);
   $$('#studyList article.q').forEach(c=>{
@@ -1122,10 +1141,10 @@ $('#allAns').onclick=()=>{
     const t=c.querySelector('.reveal-toggle');
     if(t) t.classList.toggle('on',allRevealed);
   });
-};
+});
 
 /* 번역 토글 — on = 번역 보임(기본값), off = 번역 숨김. 모든 카드에 일괄 적용 */
-$$('.koToggle').forEach(btn=>btn.onclick=()=>{
+$$('.koToggle').forEach(btn=>btn.onclick=()=>withScrollAnchor(()=>{
   allKoShown=!btn.classList.contains('on');
   $$('.koToggle').forEach(b=>b.classList.toggle('on',allKoShown));
   $$('#studyList article.q').forEach(c=>{
@@ -1133,7 +1152,7 @@ $$('.koToggle').forEach(btn=>btn.onclick=()=>{
     const t=c.querySelector('.ko-toggle');
     if(t) t.classList.toggle('on',allKoShown);
   });
-});
+}));
 
 /* 탭 */
 $$('#studyTabs button').forEach(b=>b.onclick=()=>{
