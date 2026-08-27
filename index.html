@@ -362,11 +362,12 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
   #studySearchRow{position:relative}
   .search-expand #studySearch{
     display:block;flex:1;border:none;outline:none;background:transparent;
-    padding:8px 0;font-size:.85rem;font-family:inherit;min-width:0}
+    padding:8px 0;font-size:16px;font-family:inherit;min-width:0}
+  .search-expand #studySearch:focus{box-shadow:none;border:none}
   .search-close-btn{
-    width:26px;height:26px;border-radius:50%;border:none;background:#e7e9ed;color:var(--muted);
+    width:20px;height:20px;border-radius:50%;border:none;background:#e7e9ed;color:var(--muted);
     display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
-  .search-close-btn svg{width:13px;height:13px}
+  .search-close-btn svg{width:11px;height:11px}
 }
 @media print{
   .topbar,.toolbar,.tabs,.exam-topbar,#top,.chapnav,.exam-nav{display:none!important}
@@ -940,14 +941,16 @@ function go(id){
 $$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
 
 /* ================= 공통 렌더 ================= */
-function optHTML(o,mode){
-  return `<li data-correct="${o.c}"><div class="body">`
+function optHTML(o,mode,selected){
+  const cls = selected ? ' class="selected"' : '';
+  return `<li${cls} data-correct="${o.c}"><div class="body">`
        + `<p class="en">${esc(o.e)}</p><p class="ko">${o.k}</p></div></li>`;
 }
 function cardHTML(q,mode,idx){
   const tag = q.m ? '<span class="tag">복수 정답 · 2개 선택</span>' : '';
   const code = q.c ? `<pre>${esc(q.c)}</pre>` : '';
-  const opts = q.o.map(o=>optHTML(o,mode)).join('');
+  const selSet = mode==='study' ? (studySelections[`${q.s}-${q.n}`]||[]) : [];
+  const opts = q.o.map((o,i)=>optHTML(o,mode,selSet.includes(i))).join('');
   const nums = q.o.map((o,i)=>o.c?i+1:0).filter(Boolean);
   const lead = `<span class="lead">정답: ${nums.map(n=>n+'번').join(', ')}</span>`;
 
@@ -1011,7 +1014,7 @@ function bindOptionSelection(container,opts={}){
 }
 
 /* ================= 학습하기 · 문제 풀이 ================= */
-let studySet='all', studyQuery='', allRevealed=false, allKoShown=true;
+let studySet='all', studyQuery='', allRevealed=false, allKoShown=true, studySelections={};
 function studyRender(){
   const q=studyQuery.trim().toLowerCase();
   const items=QUESTIONS.filter(x=>{
@@ -1026,7 +1029,12 @@ function studyRender(){
     : '<div class="empty">검색 결과가 없습니다.</div>';
   if(q) highlight($('#studyList'), q);
   bindCardToggles();
-  bindOptionSelection($('#studyList'));
+  bindOptionSelection($('#studyList'), {onChange: li=>{
+    const article=li.closest('article');
+    const key=`${article.dataset.set}-${article.dataset.num}`;
+    const ol=article.querySelector('ol.opts');
+    studySelections[key]=[...ol.children].map((el,i)=>el.classList.contains('selected')?i:-1).filter(i=>i>=0);
+  }});
   updateSearchNav(q ? items.length : 0);
 }
 function bindCardToggles(){
