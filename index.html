@@ -67,8 +67,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .topbar .row .guide-menu-btn{margin-left:auto}
 
 /* ---------- 툴바 ---------- */
-.toolbar{position:sticky;top:49px;z-index:30;background:rgba(244,245,247,.96);backdrop-filter:blur(10px);
-  padding:10px 0}
+.toolbar{padding:10px 0}
 .toolbar .row{max-width:900px;margin:0 auto;padding:0 20px;display:flex;flex-wrap:wrap;gap:7px;align-items:center}
 .toolbar .row+.row{margin-top:7px}
 .sets{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
@@ -341,7 +340,6 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
 .search-nav-count{font-size:.82rem;font-weight:700;color:var(--ink);white-space:nowrap;min-width:44px;text-align:center}
 
 @media(max-width:640px){
-  .toolbar{top:48px}
   .topbar .tabs button{padding:6px 8px;font-size:.78rem}
   .topbar h2{font-size:.88rem}
   .sets button.b{display:none}
@@ -406,10 +404,7 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
       <div class="sets" id="studySets" style="display:none"><button class="b on" data-set="all">전체</button><button class="b" data-set="1">Set 1</button><button class="b" data-set="2">Set 2</button><button class="b" data-set="3">Set 3</button><button class="b" data-set="4">Set 4</button><select class="set-select" id="studySetSelect"><option value="all">전체</option><option value="1">Set 1</option><option value="2">Set 2</option><option value="3">Set 3</option><option value="4">Set 4</option></select></div>
       <button class="back-circle guide-menu-btn" id="guideMenuBtn" aria-label="챕터 목록"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg></button>
     </div>
-  </div>
-
-  <div id="tabBrowse" style="display:none">
-    <div class="toolbar" id="studyToolbar">
+    <div class="toolbar" id="studyToolbar" style="display:none">
       <div class="row" id="studySearchRow">
         <button class="back-circle search-toggle-btn" id="searchToggleBtn" aria-label="검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
         <div class="search-expand">
@@ -421,6 +416,9 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
         <span class="count" id="studyCount"></span>
       </div>
     </div>
+  </div>
+
+  <div id="tabBrowse" style="display:none">
     <main class="list wrap" id="studyList"></main>
   </div>
 
@@ -1115,6 +1113,7 @@ $$('#studyTabs button').forEach(b=>b.onclick=()=>{
   const t=b.dataset.tab;
   $('#tabBrowse').style.display = t==='browse'?'':'none';
   $('#tabGuide').style.display  = t==='guide'?'':'none';
+  $('#studyToolbar').style.display = t==='browse'?'':'none';
   $('#studySets').style.display = t==='browse'?'':'none';
   $('#guideMenuBtn').style.display = t==='guide'?'':'none';
   if(t!=='browse') $('#searchNav').classList.remove('show');
