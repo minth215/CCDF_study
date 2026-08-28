@@ -80,6 +80,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
     no-repeat right center/13px;
   padding:4px 18px 4px 2px;font-size:.8rem;font-weight:700;color:var(--ink);
   font-family:inherit;cursor:pointer}
+.set-select:focus{outline:none;box-shadow:none}
 .search-toggle-btn{display:none}
 .search-expand{display:contents}
 .search-close-btn{display:none}
@@ -362,7 +363,8 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
   #studySearchRow{position:relative}
   .search-expand #studySearch{
     display:block;flex:1;border:none;outline:none;background:transparent;
-    padding:8px 0;font-size:16px;font-family:inherit;min-width:0}
+    padding:8px 0;font-size:16px;font-family:inherit;min-width:0;
+    transform:scale(.85);transform-origin:0 50%}
   .search-expand #studySearch:focus{box-shadow:none;border:none}
   .search-close-btn{
     width:20px;height:20px;border-radius:50%;border:none;background:#e7e9ed;color:var(--muted);
