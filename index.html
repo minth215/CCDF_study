@@ -1053,6 +1053,7 @@ function bindOptionSelection(container,opts={}){
 
 /* ================= 학습하기 · 문제 풀이 ================= */
 let studySet='all', studyQuery='', allRevealed=false, allKoShown=true, studySelections={};
+try{ studySelections=JSON.parse(localStorage.getItem('ccdf_selections'))||{}; }catch(e){ studySelections={}; }
 function studyRender(){
   const q=studyQuery.trim().toLowerCase();
   const items=QUESTIONS.filter(x=>{
@@ -1072,6 +1073,7 @@ function studyRender(){
     const key=`${article.dataset.set}-${article.dataset.num}`;
     const ol=article.querySelector('ol.opts');
     studySelections[key]=[...ol.children].map((el,i)=>el.classList.contains('selected')?i:-1).filter(i=>i>=0);
+    try{ localStorage.setItem('ccdf_selections', JSON.stringify(studySelections)); }catch(e){}
   }});
   updateSearchNav(q ? items.length : 0);
 }
