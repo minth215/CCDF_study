@@ -1118,11 +1118,17 @@ $('#searchCloseBtn').onclick=()=>{
 /* 토글 전후 보고 있던 문제의 화면 위치를 유지 */
 function currentAnchorCard(){
   const topbarH=$('#studyTopbar').getBoundingClientRect().height;
+  const vh=window.innerHeight;
   const cards=$$('#studyList article.q');
+  let best=null, bestVisible=-1;
   for(const c of cards){
-    if(c.getBoundingClientRect().bottom>topbarH) return c;
+    const r=c.getBoundingClientRect();
+    if(r.bottom<=topbarH) continue;
+    if(r.top>=vh) break;
+    const visible=Math.min(r.bottom,vh)-Math.max(r.top,topbarH);
+    if(visible>bestVisible){ bestVisible=visible; best=c; }
   }
-  return cards[0]||null;
+  return best||cards[0]||null;
 }
 function withScrollAnchor(fn){
   const anchor=currentAnchorCard();
