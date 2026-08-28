@@ -994,9 +994,12 @@ function cardHTML(q,mode,idx){
 
   if(mode==='study'){
     const badgeText = studySet==='all' ? `Set ${q.s} · Q${q.n}` : `Q ${q.n}`;
-    const revealOn = allRevealed ? ' on' : '';
-    const koOn = allKoShown ? ' on' : '';
-    const cardCls = 'q' + (allRevealed?' revealed':'') + (allKoShown?'':' ko-off');
+    const cardKey = `${q.s}-${q.n}`;
+    const isRevealed = cardKey in studyRevealed ? studyRevealed[cardKey] : allRevealed;
+    const isKoShown = cardKey in studyKoShown ? studyKoShown[cardKey] : allKoShown;
+    const revealOn = isRevealed ? ' on' : '';
+    const koOn = isKoShown ? ' on' : '';
+    const cardCls = 'q' + (isRevealed?' revealed':'') + (isKoShown?'':' ko-off');
     return `<article class="${cardCls}" data-set="${q.s}" data-num="${q.n}" data-multi="${q.m}">
       <div class="qhead"><span class="badge">${badgeText}</span>${tag}
         <div class="card-toggles">
@@ -1052,8 +1055,23 @@ function bindOptionSelection(container,opts={}){
 }
 
 /* ================= 학습하기 · 문제 풀이 ================= */
-let studySet='all', studyQuery='', allRevealed=false, allKoShown=true, studySelections={};
+let studySet='all', studyQuery='', allRevealed=false, allKoShown=true;
+let studySelections={}, studyRevealed={}, studyKoShown={};
 try{ studySelections=JSON.parse(localStorage.getItem('ccdf_selections'))||{}; }catch(e){ studySelections={}; }
+try{
+  const savedToggles=JSON.parse(localStorage.getItem('ccdf_toggles'))||{};
+  allRevealed = savedToggles.allRevealed || false;
+  allKoShown = savedToggles.allKoShown!==undefined ? savedToggles.allKoShown : true;
+  studyRevealed = savedToggles.studyRevealed || {};
+  studyKoShown = savedToggles.studyKoShown || {};
+}catch(e){}
+$('#allAns').classList.toggle('on',allRevealed);
+$$('.koToggle').forEach(b=>b.classList.toggle('on',allKoShown));
+function saveStudyToggles(){
+  try{
+    localStorage.setItem('ccdf_toggles', JSON.stringify({allRevealed,allKoShown,studyRevealed,studyKoShown}));
+  }catch(e){}
+}
 function studyRender(){
   const q=studyQuery.trim().toLowerCase();
   const items=QUESTIONS.filter(x=>{
@@ -1080,15 +1098,21 @@ function studyRender(){
 function bindCardToggles(){
   $$('#studyList .reveal-toggle').forEach(btn=>btn.onclick=()=>{
     const c=btn.closest('article');
+    const key=`${c.dataset.set}-${c.dataset.num}`;
     const on=!btn.classList.contains('on');
     btn.classList.toggle('on',on);
     c.classList.toggle('revealed',on);
+    studyRevealed[key]=on;
+    saveStudyToggles();
   });
   $$('#studyList .ko-toggle').forEach(btn=>btn.onclick=()=>{
     const c=btn.closest('article');
+    const key=`${c.dataset.set}-${c.dataset.num}`;
     const on=!btn.classList.contains('on');
     btn.classList.toggle('on',on);
     c.classList.toggle('ko-off',!on);
+    studyKoShown[key]=on;
+    saveStudyToggles();
   });
 }
 
@@ -1186,7 +1210,9 @@ $('#allAns').onclick=()=>withScrollAnchor(()=>{
     c.classList.toggle('revealed',allRevealed);
     const t=c.querySelector('.reveal-toggle');
     if(t) t.classList.toggle('on',allRevealed);
+    delete studyRevealed[`${c.dataset.set}-${c.dataset.num}`];
   });
+  saveStudyToggles();
 });
 
 /* 번역 토글 — on = 번역 보임(기본값), off = 번역 숨김. 모든 카드에 일괄 적용 */
@@ -1197,7 +1223,9 @@ $$('.koToggle').forEach(btn=>btn.onclick=()=>withScrollAnchor(()=>{
     c.classList.toggle('ko-off',!allKoShown);
     const t=c.querySelector('.ko-toggle');
     if(t) t.classList.toggle('on',allKoShown);
+    delete studyKoShown[`${c.dataset.set}-${c.dataset.num}`];
   });
+  saveStudyToggles();
 }));
 
 /* 탭 */
