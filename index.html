@@ -209,7 +209,7 @@ table.cmp th{background:var(--soft);font-size:.82rem;color:var(--muted);font-wei
 table.cmp td:first-child{white-space:nowrap;width:1%}
 
 /* ---------- 모의고사 세트 선택 ---------- */
-#examSetup{padding:38px 0 80px}
+#examSetup{padding:38px 20px 80px}
 #examSetup h3{font-size:1.15rem;margin:0 0 6px}
 #examSetup p.sub{color:var(--muted);font-size:.87rem;margin:0 0 24px}
 .pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:12px}
@@ -883,7 +883,7 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
       <button class="ios-toggle" id="hide-ko-exam"><span class="ios-toggle-text">번역 숨기기</span><span class="ios-toggle-track"><span class="ios-toggle-knob"></span></span></button>
     </div>
     <div class="note">
-      진행 상황은 브라우저에 저장되지 않습니다. 새로고침하거나 탭을 닫으면 고른 답이 사라집니다.
+      진행 상황은 이 기기에 자동 저장되어 앱을 나갔다 와도 이어서 풀 수 있습니다. 단, '그만두기'를 누르거나 채점하면 초기화됩니다.
     </div>
   </div>
 
@@ -991,6 +991,7 @@ function restoreAppState(){
     if(state.tab==='browse') $('#studyTabs button[data-tab="browse"]').click();
   } else if(state.screen==='exam'){
     go('exam');
+    if(restoreExamState()) return true;
   } else {
     return false;
   }
@@ -999,8 +1000,8 @@ function restoreAppState(){
   }
   return true;
 }
-document.addEventListener('visibilitychange',()=>{ if(document.hidden) saveAppState(); });
-window.addEventListener('pagehide', saveAppState);
+document.addEventListener('visibilitychange',()=>{ if(document.hidden){ saveAppState(); saveExamState(); } });
+window.addEventListener('pagehide', ()=>{ saveAppState(); saveExamState(); });
 $$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
 
 /* ================= 공통 렌더 ================= */
@@ -1021,16 +1022,16 @@ const CHAPTER_NAMES={
     el.textContent = cnt ? `${Math.round(cnt/QUESTIONS.length*100)}%` : '';
   });
 })();
-function optHTML(o,mode,selected){
+function optHTML(o,mode,selected,oidx){
   const cls = selected ? ' class="selected"' : '';
-  return `<li${cls} data-correct="${o.c}"><div class="body">`
+  return `<li${cls} data-correct="${o.c}" data-oidx="${oidx}"><div class="body">`
        + `<p class="en">${esc(o.e)}</p><p class="ko">${o.k}</p></div></li>`;
 }
 function cardHTML(q,mode,idx){
   const tag = q.m ? '<span class="tag">복수 정답</span>' : '';
   const code = q.c ? `<pre>${esc(q.c)}</pre>` : '';
   const selSet = mode==='study' ? (studySelections[`${q.s}-${q.n}`]||[]) : [];
-  const opts = q.o.map((o,i)=>optHTML(o,mode,selSet.includes(i))).join('');
+  const opts = q.o.map((o,i)=>optHTML(o,mode,selSet.includes(i),i)).join('');
   const nums = q.o.map((o,i)=>o.c?i+1:0).filter(Boolean);
   const chapterBadge = (mode==='study' && q.ch) ? `<span class="chapter-badge">${CHAPTER_NAMES[q.ch]}</span><br>` : '';
   const lead = `<span class="lead">정답: ${nums.map(n=>n+'번').join(', ')}</span>${chapterBadge}`;
@@ -1322,6 +1323,100 @@ $('#chapfilter-overlay').onclick=e=>{if(e.target===$('#chapfilter-overlay'))$('#
 /* ================= 모의고사 ================= */
 let examTimer=null, examSeconds=0, examGraded=false, currentQ=0, totalQ=0, examItems=[], selectedExamSet=null;
 
+/* 모의고사 진행 상황 저장/복원 — PWA가 백그라운드에서 종료됐다가 재실행돼도 풀던 상태 유지 */
+function saveExamState(){
+  if(!selectedExamSet || examGraded || !document.body.classList.contains('exam-active')){ clearExamState(); return; }
+  const items=$$('#examQuestions article.q').map(card=>{
+    const opts=[...card.querySelectorAll('ol.opts li')];
+    return {
+      s:card.dataset.set, n:card.dataset.num,
+      order:opts.map(li=>Number(li.dataset.oidx)),
+      selected:opts.filter(li=>li.classList.contains('selected')).map(li=>Number(li.dataset.oidx))
+    };
+  });
+  try{
+    localStorage.setItem('ccdf_exam', JSON.stringify({
+      set:selectedExamSet, currentQ, examSeconds,
+      shuffleOn:$('#shuffle-exam').classList.contains('on'),
+      hideKoOn:$('#hide-ko-exam').classList.contains('on'),
+      items
+    }));
+  }catch(e){}
+}
+function clearExamState(){
+  try{ localStorage.removeItem('ccdf_exam'); }catch(e){}
+}
+function restoreExamState(){
+  let state;
+  try{
+    const raw=localStorage.getItem('ccdf_exam');
+    if(!raw) return false;
+    state=JSON.parse(raw);
+  }catch(e){ return false; }
+  if(!state || !state.set) return false;
+
+  selectedExamSet=state.set;
+  examGraded=false;
+  examItems=QUESTIONS.filter(x=>String(x.s)===state.set);
+  totalQ=examItems.length;
+  if(!totalQ) return false;
+
+  const qContainer=$('#examQuestions');
+  qContainer.classList.remove('graded');
+  qContainer.innerHTML=examItems.map((x,i)=>{
+    let h=cardHTML(x,'exam',i);
+    const badge=`<div class="exam-qbadge">Q ${i+1}</div>`;
+    h=h.replace('<div class="qhead">',badge+'<div class="qhead">');
+    return h;
+  }).join('');
+
+  const byKey={};
+  state.items.forEach(it=>byKey[`${it.s}-${it.n}`]=it);
+  qContainer.querySelectorAll('article.q').forEach(card=>{
+    const saved=byKey[`${card.dataset.set}-${card.dataset.num}`];
+    if(!saved) return;
+    const ol=card.querySelector('ol.opts');
+    const byOidx={};
+    [...ol.children].forEach(li=>byOidx[Number(li.dataset.oidx)]=li);
+    saved.order.forEach(oidx=>{ if(byOidx[oidx]) ol.appendChild(byOidx[oidx]); });
+    saved.selected.forEach(oidx=>{ if(byOidx[oidx]) byOidx[oidx].classList.add('selected'); });
+    if(card.dataset.multi==='1'){
+      const maxSel=[...card.querySelectorAll('ol.opts li[data-correct="1"]')].length;
+      const count=saved.selected.length;
+      ol.querySelectorAll('li:not(.selected)').forEach(l=>l.classList.toggle('locked',count>=maxSel));
+    }
+  });
+
+  if(state.hideKoOn) qContainer.querySelectorAll('.ko').forEach(k=>k.style.display='none');
+  $('#hide-ko-exam').classList.toggle('on',!!state.hideKoOn);
+  $('#shuffle-exam').classList.toggle('on',!!state.shuffleOn);
+
+  bindOptionSelection(qContainer, {isLocked:()=>examGraded, onChange:()=>{updateExamProgress();saveExamState();}});
+
+  $('#examSetup').style.display='none';
+  $('#examRun').style.display='';
+  $('#exam-nav').style.display='flex';
+  $('#scoreboard-area').style.display='none';
+  $('#scoreboard-area').innerHTML='';
+  $('#exam-result-filter').style.display='none';
+  $('#examTitle').textContent=`모의고사 · Set ${state.set}`;
+  $('#et-set').textContent=`Set ${state.set}`;
+  $('#exam-topbar').style.display='block';
+  $('#examTopbarNav').style.display='none';
+  document.body.classList.add('exam-active');
+
+  currentQ=Math.min(state.currentQ||0, totalQ-1);
+  examSeconds=state.examSeconds||0;
+  const m=String(Math.floor(examSeconds/60)).padStart(2,'0');
+  const s=String(examSeconds%60).padStart(2,'0');
+  $('#et-timer').textContent=`${m}:${s}`;
+  showQuestion(currentQ);
+  updateExamProgress();
+  examTimer=setInterval(updateExamTimer,1000);
+  buildQmap(totalQ);
+  return true;
+}
+
 function startExam(set){
   selectedExamSet=set;
   examGraded=false;
@@ -1349,7 +1444,7 @@ function startExam(set){
     qContainer.querySelectorAll('.ko').forEach(k=>k.style.display='none');
   }
 
-  bindOptionSelection(qContainer, {isLocked:()=>examGraded, onChange:updateExamProgress});
+  bindOptionSelection(qContainer, {isLocked:()=>examGraded, onChange:()=>{updateExamProgress();saveExamState();}});
 
   $('#examSetup').style.display='none';
   $('#examRun').style.display='';
@@ -1371,6 +1466,7 @@ function startExam(set){
   examTimer=setInterval(updateExamTimer,1000);
   buildQmap(totalQ);
   window.scrollTo({top:0});
+  saveExamState();
 }
 
 function showQuestion(idx){
@@ -1382,6 +1478,7 @@ function showQuestion(idx){
   $('#exam-qnum').textContent=`${idx+1} / ${qs.length}`;
   updateQmapState();
   window.scrollTo(0,0);
+  saveExamState();
 }
 
 function updateQmapState(){
@@ -1445,6 +1542,7 @@ $('#submit-exam').onclick=()=>{
 
   clearInterval(examTimer);
   examGraded=true;
+  clearExamState();
 
   let correct=0, wrong=0, unanswered=0;
   qs.forEach(q=>{
@@ -1523,9 +1621,11 @@ $$('#exam-result-filter button').forEach(btn=>{
 });
 
 $('#quit-exam').onclick=()=>{
-  if(!confirm('종료 시 진행 상황은 저장되지 않습니다. 정말 종료할까요?'))return;
+  if(!confirm('그만두면 지금까지 푼 내용이 사라집니다. 정말 종료할까요?'))return;
   clearInterval(examTimer);
   examGraded=false;
+  selectedExamSet=null;
+  clearExamState();
   document.body.classList.remove('exam-active');
   $('#exam-topbar').style.display='none';
   $('#examTopbarNav').style.display='';
