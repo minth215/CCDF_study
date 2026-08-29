@@ -292,6 +292,8 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
   border:none;background:none;cursor:pointer;font-family:inherit;text-align:left}
 .chap-menu-list a:hover,.chap-menu-list button:hover{background:var(--accent-soft);color:var(--accent)}
 .chap-menu-list button.on{background:var(--accent-soft);color:var(--accent)}
+.chap-menu-list a{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.chap-menu-pct{font-size:.76rem;font-weight:600;color:var(--muted)}
 .chap-filter-count{font-size:.76rem;font-weight:600;color:var(--muted)}
 .chapter-filter-btn{margin-left:6px;position:relative}
 .chapter-filter-btn.active{background:var(--accent);color:#fff}
@@ -929,7 +931,7 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
   <div class="qmap-panel">
     <div class="qmap-inner">
       <h3>챕터 목록</h3>
-      <div class="chap-menu-list" id="chapMenuList"><a href="#ch1">01. LLM 기본 원리</a><a href="#ch2">02. Messages API 기초</a><a href="#ch3">03. 도구 사용 (Tool Use)</a><a href="#ch4">04. 스트리밍</a><a href="#ch5">05. 컨텍스트 관리</a><a href="#ch6">06. 비용과 성능 최적화</a><a href="#ch7">07. 프롬프트 엔지니어링</a><a href="#ch8">08. 보안과 프라이버시</a><a href="#ch9">09. 에이전트 설계</a><a href="#ch10">10. 개발 도구 생태계</a><a href="#ch11">11. 운영과 릴리스</a><a href="#ch12">12. 요구사항과 소프트웨어 공학</a><a href="#ch13">13. 시험 직전 체크리스트</a></div>
+      <div class="chap-menu-list" id="chapMenuList"><a href="#ch1"><span>01. LLM 기본 원리</span><span class="chap-menu-pct" data-ch="1"></span></a><a href="#ch2"><span>02. Messages API 기초</span><span class="chap-menu-pct" data-ch="2"></span></a><a href="#ch3"><span>03. 도구 사용 (Tool Use)</span><span class="chap-menu-pct" data-ch="3"></span></a><a href="#ch4"><span>04. 스트리밍</span><span class="chap-menu-pct" data-ch="4"></span></a><a href="#ch5"><span>05. 컨텍스트 관리</span><span class="chap-menu-pct" data-ch="5"></span></a><a href="#ch6"><span>06. 비용과 성능 최적화</span><span class="chap-menu-pct" data-ch="6"></span></a><a href="#ch7"><span>07. 프롬프트 엔지니어링</span><span class="chap-menu-pct" data-ch="7"></span></a><a href="#ch8"><span>08. 보안과 프라이버시</span><span class="chap-menu-pct" data-ch="8"></span></a><a href="#ch9"><span>09. 에이전트 설계</span><span class="chap-menu-pct" data-ch="9"></span></a><a href="#ch10"><span>10. 개발 도구 생태계</span><span class="chap-menu-pct" data-ch="10"></span></a><a href="#ch11"><span>11. 운영과 릴리스</span><span class="chap-menu-pct" data-ch="11"></span></a><a href="#ch12"><span>12. 요구사항과 소프트웨어 공학</span><span class="chap-menu-pct" data-ch="12"></span></a><a href="#ch13"><span>13. 시험 직전 체크리스트</span></a></div>
     </div>
   </div>
 </div>
@@ -1014,6 +1016,10 @@ const CHAPTER_NAMES={
     const cnt=counts[Number(el.dataset.ch)]||0;
     el.textContent = cnt ? `출제 비중 ${Math.round(cnt/QUESTIONS.length*100)}%` : '';
   });
+  document.querySelectorAll('.chap-menu-pct').forEach(el=>{
+    const cnt=counts[Number(el.dataset.ch)]||0;
+    el.textContent = cnt ? `${Math.round(cnt/QUESTIONS.length*100)}%` : '';
+  });
 })();
 function optHTML(o,mode,selected){
   const cls = selected ? ' class="selected"' : '';
@@ -1021,7 +1027,7 @@ function optHTML(o,mode,selected){
        + `<p class="en">${esc(o.e)}</p><p class="ko">${o.k}</p></div></li>`;
 }
 function cardHTML(q,mode,idx){
-  const tag = q.m ? '<span class="tag">복수 정답 · 2개 선택</span>' : '';
+  const tag = q.m ? '<span class="tag">복수 정답</span>' : '';
   const code = q.c ? `<pre>${esc(q.c)}</pre>` : '';
   const selSet = mode==='study' ? (studySelections[`${q.s}-${q.n}`]||[]) : [];
   const opts = q.o.map((o,i)=>optHTML(o,mode,selSet.includes(i))).join('');
