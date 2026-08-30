@@ -243,7 +243,7 @@ table.cmp td:first-child{white-space:nowrap;width:1%}
 .exam-topbar .et-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
 .exam-topbar .et-btn.primary:hover{opacity:.88}
 body.exam-active .topbar{display:none!important}
-body.exam-active .screen#exam .wrap{padding-top:68px}
+body.exam-active .screen#exam .wrap{padding-top:56px}
 @media(max-width:640px){
   .exam-topbar-inner{padding:7px 14px;gap:6px}
   .exam-topbar .et-timer{display:none}
@@ -253,9 +253,10 @@ body.exam-active .screen#exam .wrap{padding-top:68px}
 /* Exam mode cards */
 .exam-mode article.q{background:transparent;border:none;padding:0;margin-bottom:0}
 .exam-mode .qhead{display:none}
+.exam-qbadge-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
 .exam-qbadge{
   display:inline-block;font-size:.72rem;font-weight:700;color:var(--accent);
-  background:var(--accent-soft);padding:3px 9px;border-radius:999px;margin-bottom:12px}
+  background:var(--accent-soft);padding:3px 9px;border-radius:999px}
 .exam-mode ol.opts li{cursor:pointer;user-select:none}
 .exam-mode ol.opts li:hover:not(.selected){border-color:#b0bce6;background:#f5f7fd}
 .exam-mode ol.opts li.selected{border-color:var(--accent);background:var(--accent-soft)}
@@ -1324,6 +1325,19 @@ $('#chapfilter-overlay').onclick=e=>{if(e.target===$('#chapfilter-overlay'))$('#
 let examTimer=null, examSeconds=0, examGraded=false, currentQ=0, totalQ=0, examItems=[], selectedExamSet=null;
 
 /* 모의고사 진행 상황 저장/복원 — PWA가 백그라운드에서 종료됐다가 재실행돼도 풀던 상태 유지 */
+function examBadgeHTML(i,koOn){
+  return `<div class="exam-qbadge-row"><div class="exam-qbadge">Q ${i+1}</div>`
+       + `<button class="mini-toggle ko-toggle${koOn?' on':''}"><span class="mini-toggle-label">번역</span><span class="mini-toggle-track"><span class="mini-toggle-knob"></span></span></button></div>`;
+}
+function bindExamKoToggles(container){
+  container.querySelectorAll('.exam-qbadge-row .ko-toggle').forEach(btn=>btn.onclick=()=>{
+    const card=btn.closest('article.q');
+    const on=!btn.classList.contains('on');
+    btn.classList.toggle('on',on);
+    card.classList.toggle('ko-off',!on);
+    saveExamState();
+  });
+}
 function saveExamState(){
   if(!selectedExamSet || examGraded || !document.body.classList.contains('exam-active')){ clearExamState(); return; }
   const items=$$('#examQuestions article.q').map(card=>{
@@ -1331,7 +1345,8 @@ function saveExamState(){
     return {
       s:card.dataset.set, n:card.dataset.num,
       order:opts.map(li=>Number(li.dataset.oidx)),
-      selected:opts.filter(li=>li.classList.contains('selected')).map(li=>Number(li.dataset.oidx))
+      selected:opts.filter(li=>li.classList.contains('selected')).map(li=>Number(li.dataset.oidx)),
+      koOff:card.classList.contains('ko-off')
     };
   });
   try{
@@ -1361,17 +1376,19 @@ function restoreExamState(){
   totalQ=examItems.length;
   if(!totalQ) return false;
 
+  const byKey={};
+  state.items.forEach(it=>byKey[`${it.s}-${it.n}`]=it);
+
   const qContainer=$('#examQuestions');
   qContainer.classList.remove('graded');
   qContainer.innerHTML=examItems.map((x,i)=>{
     let h=cardHTML(x,'exam',i);
-    const badge=`<div class="exam-qbadge">Q ${i+1}</div>`;
-    h=h.replace('<div class="qhead">',badge+'<div class="qhead">');
+    const saved=byKey[`${x.s}-${x.n}`];
+    const koOn=!(saved?saved.koOff:state.hideKoOn);
+    h=h.replace('<div class="qhead">',examBadgeHTML(i,koOn)+'<div class="qhead">');
     return h;
   }).join('');
 
-  const byKey={};
-  state.items.forEach(it=>byKey[`${it.s}-${it.n}`]=it);
   qContainer.querySelectorAll('article.q').forEach(card=>{
     const saved=byKey[`${card.dataset.set}-${card.dataset.num}`];
     if(!saved) return;
@@ -1385,13 +1402,14 @@ function restoreExamState(){
       const count=saved.selected.length;
       ol.querySelectorAll('li:not(.selected)').forEach(l=>l.classList.toggle('locked',count>=maxSel));
     }
+    card.classList.toggle('ko-off', saved.koOff!==undefined ? saved.koOff : !!state.hideKoOn);
   });
 
-  if(state.hideKoOn) qContainer.querySelectorAll('.ko').forEach(k=>k.style.display='none');
   $('#hide-ko-exam').classList.toggle('on',!!state.hideKoOn);
   $('#shuffle-exam').classList.toggle('on',!!state.shuffleOn);
 
   bindOptionSelection(qContainer, {isLocked:()=>examGraded, onChange:()=>{updateExamProgress();saveExamState();}});
+  bindExamKoToggles(qContainer);
 
   $('#examSetup').style.display='none';
   $('#examRun').style.display='';
@@ -1423,12 +1441,12 @@ function startExam(set){
   examItems=QUESTIONS.filter(x=>String(x.s)===set);
   totalQ=examItems.length;
 
+  const hideKoStart=$('#hide-ko-exam').classList.contains('on');
   const qContainer=$('#examQuestions');
   qContainer.classList.remove('graded');
   qContainer.innerHTML=examItems.map((x,i)=>{
     let h=cardHTML(x,'exam',i);
-    const badge=`<div class="exam-qbadge">Q ${i+1}</div>`;
-    h=h.replace('<div class="qhead">',badge+'<div class="qhead">');
+    h=h.replace('<div class="qhead">',examBadgeHTML(i,!hideKoStart)+'<div class="qhead">');
     return h;
   }).join('');
 
@@ -1440,11 +1458,12 @@ function startExam(set){
     });
   }
 
-  if($('#hide-ko-exam').classList.contains('on')){
-    qContainer.querySelectorAll('.ko').forEach(k=>k.style.display='none');
+  if(hideKoStart){
+    qContainer.querySelectorAll('article.q').forEach(card=>card.classList.add('ko-off'));
   }
 
   bindOptionSelection(qContainer, {isLocked:()=>examGraded, onChange:()=>{updateExamProgress();saveExamState();}});
+  bindExamKoToggles(qContainer);
 
   $('#examSetup').style.display='none';
   $('#examRun').style.display='';
